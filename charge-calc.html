@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4ecca3">
+<link rel="manifest" href="./charge-manifest.json">
+<title>Charge Time Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+h1{font-size:22px;margin-bottom:6px;color:#4ecca3;}
+.subtitle{font-size:12px;color:#888;margin-bottom:20px;}
+.card{background:#16213e;border:1px solid #333;border-radius:12px;padding:24px;width:100%;max-width:360px;}
+label{display:block;font-size:13px;color:#aaa;margin-bottom:4px;}
+input[type=number]{width:100%;padding:12px;font-size:20px;border:2px solid #444;border-radius:8px;background:#0d1b3e;color:#eee;text-align:center;margin-bottom:16px;}
+input[type=number]:focus{outline:none;border-color:#4ecca3;}
+.result{background:#0d1b3e;border-radius:8px;padding:16px;text-align:center;margin-top:12px;}
+.result .time{font-size:36px;font-weight:bold;color:#4ecca3;}
+.result .detail{font-size:12px;color:#888;margin-top:8px;line-height:1.7;}
+.bar-wrap{background:#0d1b3e;border-radius:6px;height:24px;margin:8px 0 16px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:6px;transition:width 0.3s;}
+.bar-label{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+.bar-target{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:0.7;}
+.specs{font-size:10px;color:#666;margin-top:16px;text-align:center;line-height:1.6;}
+.warn{color:#e9a045;font-size:12px;margin-top:8px;text-align:center;}
+</style>
+</head>
+<body>
+<h1>⚡ Charge Time Calculator</h1>
+<div class="subtitle">76V 48Ah Li-ion (21S) · 5A Charger</div>
+<div class="card">
+<label>Current Pack Voltage (V)</label>
+<input type="number" id="volts" step="0.1" min="63" max="88.2" value="72" oninput="calc()">
+<div class="bar-wrap">
+<div class="bar-fill" id="barFill"></div>
+<div class="bar-target" id="barTarget" style="left:80%;"></div>
+<div class="bar-label" id="barLabel">0%</div>
+</div>
+<div class="result" id="result">
+<div class="time" id="timeDisplay">--</div>
+<div class="detail" id="detailDisplay"></div>
+</div>
+<div class="warn" id="warnDisplay"></div>
+</div>
+<div class="specs">
+Battery: 21S12P 21700 · 48Ah · 63V–88.2V<br>
+Charger: 5A CC/CV · 80% target ≈ 83.2V<br>
+CC phase only (linear estimate to 80%)
+</div>
+<script>
+// 21S Li-ion pack parameters
+var CELLS = 21;
+var V_MIN = 3.0 * CELLS;  // 63.0V (0% SOC)
+var V_MAX = 4.2 * CELLS;  // 88.2V (100% SOC)
+var V_80 = 3.96 * CELLS;  // ~83.2V (80% SOC — approx end of CC phase)
+var AH = 48;
+var CHARGER_A = 5;
+
+// Approximate SOC from voltage (linear interpolation — reasonable for Li-ion in mid-range)
+// More accurate would be a lookup table, but for planning purposes linear is within ~5%
+function voltToSoc(v) {
+  if (v <= V_MIN) return 0;
+  if (v >= V_MAX) return 100;
+  return ((v - V_MIN) / (V_MAX - V_MIN)) * 100;
+}
+
+function calc() {
+  var v = parseFloat(document.getElementById('volts').value);
+  var warn = document.getElementById('warnDisplay');
+  var timeEl = document.getElementById('timeDisplay');
+  var detailEl = document.getElementById('detailDisplay');
+  var barFill = document.getElementById('barFill');
+  var barLabel = document.getElementById('barLabel');
+  warn.textContent = '';
+
+  if (isNaN(v) || v < V_MIN) {
+    timeEl.textContent = '--';
+    detailEl.textContent = 'Enter a voltage between ' + V_MIN.toFixed(1) + 'V and ' + V_MAX.toFixed(1) + 'V';
+    barFill.style.width = '0%';
+    barLabel.textContent = '0%';
+    return;
+  }
+  if (v >= V_80) {
+    timeEl.textContent = 'Already ≥80%';
+    detailEl.textContent = 'Pack is at or above 80% SOC (' + voltToSoc(v).toFixed(0) + '%). No CC charging needed.';
+    var pct = Math.min(100, voltToSoc(v));
+    barFill.style.width = pct + '%';
+    barFill.style.background = '#4ecca3';
+    barLabel.textContent = pct.toFixed(0) + '%';
+    return;
+  }
+  if (v > V_MAX) {
+    warn.textContent = '⚠ Voltage exceeds pack max (88.2V)';
+    return;
+  }
+
+  var socNow = voltToSoc(v);
+  var socTarget = 80;
+  var ahNeeded = ((socTarget - socNow) / 100) * AH;
+  var hours = ahNeeded / CHARGER_A;
+  var h = Math.floor(hours);
+  var m = Math.round((hours - h) * 60);
+
+  var timeStr;
+  if (h === 0) timeStr = m + ' min';
+  else if (m === 0) timeStr = h + 'h';
+  else timeStr = h + 'h ' + m + 'min';
+
+  timeEl.textContent = timeStr;
+  detailEl.textContent =
+    'Current SOC: ~' + socNow.toFixed(0) + '% → Target: 80%\n' +
+    'Ah needed: ' + ahNeeded.toFixed(1) + ' Ah @ ' + CHARGER_A + 'A\n' +
+    'Target voltage: ~' + V_80.toFixed(1) + 'V';
+
+  // Bar
+  var pct = Math.min(100, socNow);
+  barFill.style.width = pct + '%';
+  barFill.style.background = socNow < 20 ? '#e94560' : socNow < 50 ? '#e9a045' : '#4ecca3';
+  barLabel.textContent = socNow.toFixed(0) + '%';
+}
+
+calc();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./charge-sw.js');
+}
+</script>
+</body>
+</html>
