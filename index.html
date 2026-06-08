@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Apps</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+h1{font-size:24px;margin-bottom:24px;color:#00d4ff;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;width:100%;max-width:400px;}
+.card{background:#16213e;border:1px solid #333;border-radius:12px;padding:20px;text-align:center;text-decoration:none;color:#eee;transition:border-color 0.2s,transform 0.1s;}
+.card:hover{border-color:#00d4ff;transform:translateY(-2px);}
+.card .icon{font-size:40px;margin-bottom:10px;}
+.card .name{font-size:14px;font-weight:bold;}
+.card .desc{font-size:11px;color:#888;margin-top:4px;}
+</style>
+</head>
+<body>
+<h1>My Apps</h1>
+<div class="grid">
+<a class="card" href="./dice.html">
+<div class="icon">🎲</div>
+<div class="name">Dice Roller</div>
+<div class="desc">Custom range dice with 3D animation</div>
+</a>
+<a class="card" href="./charge-calc.html">
+<div class="icon">⚡</div>
+<div class="name">Charge Calculator</div>
+<div class="desc">76V 48Ah Li-ion · Time to 80%</div>
+</a>
+</div>
+</body>
+</html>
