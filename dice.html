@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e94560">
+<link rel="manifest" href="./dice-manifest.json">
+<title>Dice Roller</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  overflow-x: hidden;
+  position: relative;
+}
+/* Animated background canvas */
+#bgCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+body > *:not(#bgCanvas) {
+  position: relative;
+  z-index: 1;
+}
+h1 { font-size: 24px; margin-bottom: 20px; }
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+label { font-size: 16px; }
+input[type="number"] {
+  width: 70px;
+  padding: 10px;
+  font-size: 18px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background: #16213e;
+  color: #eee;
+  text-align: center;
+}
+.dice-info {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 25px;
+}
+
+/* 3D dice scene */
+.dice-scene {
+  width: 140px;
+  height: 140px;
+  perspective: 600px;
+  margin: 10px 0 25px;
+}
+.dice-cube {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-25deg) rotateY(25deg);
+  transition: transform 0.15s ease-out;
+}
+.dice-cube.rolling {
+  transition: none;
+}
+.dice-face {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  backface-visibility: hidden;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+/* Red gradient faces */
+.dice-face:nth-child(1) { background: linear-gradient(135deg, #e94560, #c0392b); transform: rotateY(0deg) translateZ(70px); }
+.dice-face:nth-child(2) { background: linear-gradient(135deg, #d63851, #b83224); transform: rotateY(180deg) translateZ(70px); }
+.dice-face:nth-child(3) { background: linear-gradient(135deg, #e94560, #c0392b); transform: rotateY(-90deg) translateZ(70px); }
+.dice-face:nth-child(4) { background: linear-gradient(135deg, #d63851, #b83224); transform: rotateY(90deg) translateZ(70px); }
+.dice-face:nth-child(5) { background: linear-gradient(135deg, #e94560, #c0392b); transform: rotateX(90deg) translateZ(70px); }
+.dice-face:nth-child(6) { background: linear-gradient(135deg, #d63851, #b83224); transform: rotateX(-90deg) translateZ(70px); }
+
+/* Shadow under dice */
+.dice-shadow {
+  width: 120px;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, transparent 70%);
+  margin-top: 10px;
+  border-radius: 50%;
+}
+
+/* Result display */
+.result-display {
+  font-size: 64px;
+  font-weight: bold;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e94560;
+  text-shadow: 0 0 20px rgba(233,69,96,0.5);
+  margin-bottom: 15px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.result-display.show { opacity: 1; }
+
+button#rollBtn {
+  padding: 15px 50px;
+  font-size: 22px;
+  border: none;
+  border-radius: 12px;
+  background: #e94560;
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s, transform 0.1s;
+}
+button#rollBtn:hover { background: #d63851; }
+button#rollBtn:active { transform: scale(0.96); }
+button#rollBtn:disabled { opacity: 0.5; cursor: default; }
+
+#history {
+  margin-top: 25px;
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<h1>🎲 Dice Roller</h1>
+<div class="controls">
+  <label>Min</label>
+  <input type="number" id="minVal" value="1">
+  <label>Max</label>
+  <input type="number" id="maxVal" value="6">
+</div>
+<div class="dice-info" id="diceInfo"></div>
+
+<div class="dice-scene">
+  <div class="dice-cube" id="diceCube">
+    <div class="dice-face"></div>
+    <div class="dice-face"></div>
+    <div class="dice-face"></div>
+    <div class="dice-face"></div>
+    <div class="dice-face"></div>
+    <div class="dice-face"></div>
+  </div>
+</div>
+<div class="dice-shadow"></div>
+
+<div class="result-display" id="resultDisplay"></div>
+
+<button id="rollBtn">ROLL</button>
+<div id="history"></div>
+
+<script>
+const minInput = document.getElementById('minVal');
+const maxInput = document.getElementById('maxVal');
+const diceInfo = document.getElementById('diceInfo');
+const diceCube = document.getElementById('diceCube');
+const resultDisplay = document.getElementById('resultDisplay');
+const historyEl = document.getElementById('history');
+const rollBtn = document.getElementById('rollBtn');
+const faces = document.querySelectorAll('.dice-face');
+let rolls = [];
+
+function updateInfo() {
+  const min = parseInt(minInput.value) || 0;
+  const max = parseInt(maxInput.value) || 0;
+  const options = max - min + 1;
+  const sides = options * 3;
+  diceInfo.textContent = options > 0
+    ? options + ' options \u00d7 3 = ' + sides + '-sided die'
+    : 'Set a valid range';
+}
+
+function randomFaceValues(min, max) {
+  // Put random numbers from the range on each visible face
+  for (let i = 0; i < faces.length; i++) {
+    faces[i].textContent = Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+}
+
+function roll() {
+  const min = parseInt(minInput.value) || 0;
+  const max = parseInt(maxInput.value) || 0;
+  if (min > max) { resultDisplay.textContent = '\u26a0\ufe0f'; resultDisplay.classList.add('show'); return; }
+
+  // Build weighted faces: 3 of each number
+  const pool = [];
+  for (let i = min; i <= max; i++) pool.push(i, i, i);
+
+  rollBtn.disabled = true;
+  resultDisplay.classList.remove('show');
+  diceCube.classList.add('rolling');
+
+  // Pick final result
+  const final = pool[Math.floor(Math.random() * pool.length)];
+
+  // Spin animation
+  let frame = 0;
+  const totalFrames = 20;
+  let rx = -25, ry = 25;
+
+  function animate() {
+    // Spin speeds that decelerate
+    const speed = Math.max(1, (totalFrames - frame) * 2);
+    rx += speed * 15;
+    ry += speed * 10;
+
+    diceCube.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+
+    // Shuffle face numbers during spin
+    if (frame % 2 === 0) randomFaceValues(min, max);
+
+    frame++;
+    if (frame < totalFrames) {
+      setTimeout(animate, 40 + frame * 12);
+    } else {
+      // Land: put final number on front face, others random
+      diceCube.classList.remove('rolling');
+      // Snap to a clean rotation showing face 1 (front)
+      const landX = Math.round(rx / 360) * 360 - 25;
+      const landY = Math.round(ry / 360) * 360 + 25;
+      diceCube.style.transform = 'rotateX(' + landX + 'deg) rotateY(' + landY + 'deg)';
+
+      // Set the final number on all faces so no matter the angle it shows correctly
+      for (let i = 0; i < faces.length; i++) faces[i].textContent = final;
+
+      // Show result below
+      setTimeout(function() {
+        resultDisplay.textContent = final;
+        resultDisplay.classList.add('show');
+        rolls.unshift(final);
+        if (rolls.length > 20) rolls.pop();
+        historyEl.textContent = 'History: ' + rolls.join(', ');
+        rollBtn.disabled = false;
+      }, 200);
+    }
+  }
+  animate();
+}
+
+minInput.addEventListener('input', updateInfo);
+maxInput.addEventListener('input', updateInfo);
+rollBtn.addEventListener('click', roll);
+updateInfo();
+</script>
+
+<script>
+// Floating dice background
+(function() {
+  var canvas = document.getElementById('bgCanvas');
+  var ctx = canvas.getContext('2d');
+  var dice = [];
+  var count = 18;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawDie(x, y, size, rot, opacity, val) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.globalAlpha = opacity;
+
+    // Die body
+    var r = size * 0.18;
+    var hs = size / 2;
+    ctx.beginPath();
+    ctx.moveTo(-hs + r, -hs);
+    ctx.lineTo(hs - r, -hs);
+    ctx.quadraticCurveTo(hs, -hs, hs, -hs + r);
+    ctx.lineTo(hs, hs - r);
+    ctx.quadraticCurveTo(hs, hs, hs - r, hs);
+    ctx.lineTo(-hs + r, hs);
+    ctx.quadraticCurveTo(-hs, hs, -hs, hs - r);
+    ctx.lineTo(-hs, -hs + r);
+    ctx.quadraticCurveTo(-hs, -hs, -hs + r, -hs);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(233, 69, 96, 0.25)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(233, 69, 96, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Dots
+    var dotR = size * 0.09;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    var positions = {
+      1: [[0,0]],
+      2: [[-0.28,-0.28],[0.28,0.28]],
+      3: [[-0.28,-0.28],[0,0],[0.28,0.28]],
+      4: [[-0.28,-0.28],[0.28,-0.28],[-0.28,0.28],[0.28,0.28]],
+      5: [[-0.28,-0.28],[0.28,-0.28],[0,0],[-0.28,0.28],[0.28,0.28]],
+      6: [[-0.28,-0.28],[0.28,-0.28],[-0.28,0],[0.28,0],[-0.28,0.28],[0.28,0.28]]
+    };
+    var dots = positions[val] || positions[1];
+    for (var i = 0; i < dots.length; i++) {
+      ctx.beginPath();
+      ctx.arc(dots[i][0] * size, dots[i][1] * size, dotR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Init floating dice
+  for (var i = 0; i < count; i++) {
+    dice.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: 30 + Math.random() * 40,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.008,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -0.2 - Math.random() * 0.5,
+      opacity: 0.08 + Math.random() * 0.15,
+      val: Math.floor(Math.random() * 6) + 1
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle radial glow in center
+    var grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width * 0.6);
+    grd.addColorStop(0, 'rgba(233, 69, 96, 0.06)');
+    grd.addColorStop(1, 'rgba(26, 26, 46, 0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (var i = 0; i < dice.length; i++) {
+      var d = dice[i];
+      d.x += d.vx;
+      d.y += d.vy;
+      d.rot += d.rotSpeed;
+
+      // Wrap around
+      if (d.y < -d.size) { d.y = canvas.height + d.size; d.x = Math.random() * canvas.width; d.val = Math.floor(Math.random() * 6) + 1; }
+      if (d.x < -d.size) d.x = canvas.width + d.size;
+      if (d.x > canvas.width + d.size) d.x = -d.size;
+
+      drawDie(d.x, d.y, d.size, d.rot, d.opacity, d.val);
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./dice-sw.js');
+}
+</script>
+</body>
+</html>
