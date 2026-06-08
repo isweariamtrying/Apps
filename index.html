@@ -6,29 +6,70 @@
 <title>My Apps</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Arial,sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+body{font-family:Arial,sans-serif;background:#1a1a2e;color:#eee;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:30px 20px;}
 h1{font-size:24px;margin-bottom:24px;color:#00d4ff;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;width:100%;max-width:400px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;width:100%;max-width:500px;}
 .card{background:#16213e;border:1px solid #333;border-radius:12px;padding:20px;text-align:center;text-decoration:none;color:#eee;transition:border-color 0.2s,transform 0.1s;}
 .card:hover{border-color:#00d4ff;transform:translateY(-2px);}
 .card .icon{font-size:40px;margin-bottom:10px;}
 .card .name{font-size:14px;font-weight:bold;}
-.card .desc{font-size:11px;color:#888;margin-top:4px;}
+.loading{color:#888;font-size:14px;margin-top:20px;}
 </style>
 </head>
 <body>
 <h1>My Apps</h1>
-<div class="grid">
-<a class="card" href="./dice.html">
-<div class="icon">🎲</div>
-<div class="name">Dice Roller</div>
-<div class="desc">Custom range dice with 3D animation</div>
-</a>
-<a class="card" href="./charge-calc.html">
-<div class="icon">⚡</div>
-<div class="name">Charge Calculator</div>
-<div class="desc">76V 48Ah Li-ion · Time to 80%</div>
-</a>
-</div>
+<div class="grid" id="grid"></div>
+<div class="loading" id="loading">Loading apps...</div>
+<script>
+var REPO = 'isweariamtrying/Apps';
+var BRANCH = 'main';
+var API_URL = 'https://api.github.com/repos/' + REPO + '/contents?ref=' + BRANCH;
+var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH + '/';
+
+// Fetch file list from GitHub API (public, no auth needed)
+fetch(API_URL)
+  .then(function(r){ return r.json(); })
+  .then(function(files){
+    var htmlFiles = files.filter(function(f){
+      return f.name.endsWith('.html') && f.name !== 'index.html';
+    });
+    if(htmlFiles.length === 0){
+      document.getElementById('loading').textContent = 'No apps found.';
+      return;
+    }
+    document.getElementById('loading').style.display = 'none';
+    // For each HTML file, try to extract the <title> for the card name
+    var promises = htmlFiles.map(function(f){
+      return fetch(RAW_BASE + f.name)
+        .then(function(r){ return r.text(); })
+        .then(function(html){
+          var match = html.match(/<title>(.*?)<\/title>/i);
+          var title = match ? match[1] : f.name.replace('.html','');
+          // Try to find a theme-color or emoji in the file for the icon
+          var emoji = '📱';
+          if(html.indexOf('🎲') !== -1) emoji = '🎲';
+          else if(html.indexOf('⚡') !== -1) emoji = '⚡';
+          else if(html.indexOf('📷') !== -1) emoji = '📷';
+          else if(html.indexOf('🔧') !== -1) emoji = '🔧';
+          else if(html.indexOf('🛠') !== -1) emoji = '🛠';
+          return { name: f.name, title: title, emoji: emoji };
+        })
+        .catch(function(){ return { name: f.name, title: f.name.replace('.html',''), emoji: '📱' }; });
+    });
+    Promise.all(promises).then(function(apps){
+      var grid = document.getElementById('grid');
+      apps.forEach(function(app){
+        var a = document.createElement('a');
+        a.className = 'card';
+        a.href = './' + app.name;
+        a.innerHTML = '<div class="icon">' + app.emoji + '</div><div class="name">' + app.title + '</div>';
+        grid.appendChild(a);
+      });
+    });
+  })
+  .catch(function(err){
+    document.getElementById('loading').textContent = 'Could not load apps. Try refreshing.';
+  });
+</script>
 </body>
 </html>
