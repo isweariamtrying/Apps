@@ -14,19 +14,44 @@ h1{font-size:24px;margin-bottom:24px;color:#00d4ff;}
 .card .icon{font-size:40px;margin-bottom:10px;}
 .card .name{font-size:14px;font-weight:bold;}
 .loading{color:#888;font-size:14px;margin-top:20px;}
+.instructions{margin-top:40px;width:100%;max-width:500px;background:#16213e;border:1px solid #333;border-radius:12px;padding:20px 24px;font-size:13px;line-height:1.8;}
+.instructions h2{color:#00d4ff;font-size:16px;margin-bottom:12px;}
+.instructions h3{color:#4ecca3;font-size:13px;margin:16px 0 6px;}
+.instructions ol{padding-left:20px;margin:0;}
+.instructions li{margin-bottom:4px;}
+.instructions .note{color:#888;font-size:11px;margin-top:6px;}
 </style>
 </head>
 <body>
 <h1>My Apps</h1>
 <div class="grid" id="grid"></div>
 <div class="loading" id="loading">Loading apps...</div>
+
+<div class="instructions">
+<h2>Install as an App</h2>
+<h3>Android (Chrome)</h3>
+<ol>
+<li>Open any app link above in <b>Chrome</b></li>
+<li>Tap the <b>three-dot menu</b> (top right)</li>
+<li>Tap <b>"Install app"</b> or <b>"Add to Home screen"</b></li>
+<li>Done — opens full-screen, works offline</li>
+</ol>
+<h3>iPhone (Safari only)</h3>
+<ol>
+<li>Open any app link above in <b>Safari</b></li>
+<li>Tap the <b>Share button</b> (square with arrow, bottom center)</li>
+<li>Scroll down and tap <b>"Add to Home Screen"</b></li>
+<li>Done — opens full-screen, works offline</li>
+</ol>
+<p class="note">Chrome on iPhone doesn't support app install — must use Safari.</p>
+</div>
+
 <script>
 var REPO = 'isweariamtrying/Apps';
 var BRANCH = 'main';
 var API_URL = 'https://api.github.com/repos/' + REPO + '/contents?ref=' + BRANCH;
 var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH + '/';
 
-// Fetch file list from GitHub API (public, no auth needed)
 fetch(API_URL)
   .then(function(r){ return r.json(); })
   .then(function(files){
@@ -38,18 +63,19 @@ fetch(API_URL)
       return;
     }
     document.getElementById('loading').style.display = 'none';
-    // For each HTML file, try to extract the <title> for the card name
     var promises = htmlFiles.map(function(f){
       return fetch(RAW_BASE + f.name)
         .then(function(r){ return r.text(); })
         .then(function(html){
           var match = html.match(/<title>(.*?)<\/title>/i);
           var title = match ? match[1] : f.name.replace('.html','');
-          // Try to find a theme-color or emoji in the file for the icon
           var emoji = '📱';
           if(html.indexOf('🎲') !== -1) emoji = '🎲';
           else if(html.indexOf('⚡') !== -1) emoji = '⚡';
           else if(html.indexOf('📷') !== -1) emoji = '📷';
+          else if(html.indexOf('⏱') !== -1) emoji = '⏱';
+          else if(html.indexOf('⏳') !== -1) emoji = '⏳';
+          else if(html.indexOf('😢') !== -1) emoji = '😢';
           else if(html.indexOf('🔧') !== -1) emoji = '🔧';
           else if(html.indexOf('🛠') !== -1) emoji = '🛠';
           return { name: f.name, title: title, emoji: emoji };
