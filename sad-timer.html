@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Mood Timer</title>
+    <style>
+        :root {
+            --bg-color: #87CEEB; /* Sky blue default */
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            transition: background-color 1s ease;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #environment {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            transition: all 1s ease;
+        }
+
+        #character {
+            font-size: 6rem;
+            margin: 20px 0;
+            transition: transform 0.5s ease;
+            display: inline-block;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        .counter {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .status-text {
+            font-style: italic;
+            margin-bottom: 25px;
+            min-height: 24px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            margin: 5px;
+        }
+
+        .btn-reset {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .btn-sim {
+            background-color: #ff9800;
+            color: white;
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+
+        .btn-sim:hover {
+            background-color: #e68a00;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="environment">☀️</div>
+        <div id="character">😊</div>
+        
+        <h1 id="heading">Days Without Reset</h1>
+        <div class="counter"><span id="day-count">0</span> / 30 Days</div>
+        <p class="status-text" id="status">Everything is bright and happy!</p>
+
+        <button class="btn-reset" onclick="resetTimer()">Reset Timer</button>
+        <br><br>
+        <hr style="border: 0; border-top: 1px solid #ccc;">
+        <p style="font-size: 0.8rem; color: #666;">Testing Tools:</p>
+        <button class="btn-sim" onclick="simulateDay()">Simulate +1 Day</button>
+    </div>
+
+    <script>
+        // Initialize days from localStorage or start at 0
+        let days = parseInt(localStorage.getItem('timerDays')) || 0;
+
+        const envEl = document.getElementById('environment');
+        const charEl = document.getElementById('character');
+        const dayCountEl = document.getElementById('day-count');
+        const statusEl = document.getElementById('status');
+        const headingEl = document.getElementById('heading');
+
+        function updateDisplay() {
+            dayCountEl.textContent = days;
+
+            // Stage 1: Happy & Sunny (Days 0 - 7)
+            if (days <= 7) {
+                document.documentElement.style.setProperty('--bg-color', '#87CEEB'); // Sky Blue
+                envEl.textContent = "☀️";
+                charEl.textContent = "😊";
+                charEl.style.transform = "rotate(0deg)";
+                statusEl.textContent = "Everything is bright and happy!";
+                headingEl.textContent = "Days Without Reset";
+            } 
+            // Stage 2: Getting gloomy/sad (Days 8 - 15)
+            else if (days <= 15) {
+                document.documentElement.style.setProperty('--bg-color', '#A9A9A9'); // Dark Gray
+                envEl.textContent = "☁️";
+                charEl.textContent = "🙁";
+                charEl.style.transform = "rotate(0deg)";
+                statusEl.textContent = "The clouds are rolling in. Feeling a bit down.";
+                headingEl.textContent = "Days Without Reset";
+            } 
+            // Stage 3: Depressed / Stormy (Days 16 - 29)
+            else if (days < 30) {
+                document.documentElement.style.setProperty('--bg-color', '#555555'); // Very Dark Gray
+                envEl.textContent = "⛈️";
+                charEl.textContent = "😭";
+                charEl.style.transform = "rotate(0deg)";
+                statusEl.textContent = "It's a total thunderstorm. Deeply depressed...";
+                headingEl.textContent = "Days Without Reset";
+            } 
+            // Stage 4: Dead in the ground (Day 30+)
+            else {
+                document.documentElement.style.setProperty('--bg-color', '#1a1a1a'); // Black/Earth
+                envEl.textContent = "🪦"; // Tombstone
+                charEl.textContent = "💀"; // Skull
+                charEl.style.transform = "translateY(20px)"; // Sinking into the "ground"
+                statusEl.textContent = "Too late. RIP.";
+                headingEl.textContent = "Game Over";
+            }
+        }
+
+        function resetTimer() {
+            days = 0;
+            localStorage.setItem('timerDays', days);
+            updateDisplay();
+        }
+
+        function simulateDay() {
+            days++;
+            localStorage.setItem('timerDays', days);
+            updateDisplay();
+        }
+
+        // Real-time tracking logic
+        // This checks if 24 hours have passed since the last tracked timestamp
+        function checkRealTimeProgress() {
+            const lastCheck = localStorage.getItem('lastSavedTime');
+            const now = Date.now();
+
+            if (lastCheck) {
+                const timePassed = now - parseInt(lastCheck);
+                const oneDayInMs = 24 * 60 * 60 * 1000; 
+                
+                if (timePassed >= oneDayInMs) {
+                    const daysToEarn = Math.floor(timePassed / oneDayInMs);
+                    days = Math.min(days + daysToEarn, 30); // Cap at 30
+                    localStorage.setItem('timerDays', days);
+                    localStorage.setItem('lastSavedTime', now - (timePassed % oneDayInMs));
+                }
+            } else {
+                localStorage.setItem('lastSavedTime', now);
+            }
+            updateDisplay();
+        }
+
+        // Run on page load
+        checkRealTimeProgress();
+        // Check every hour while the page stays open
+        setInterval(checkRealTimeProgress, 3600000); 
+
+    </script>
+</body>
+</html>
