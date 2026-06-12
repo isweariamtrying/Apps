@@ -1,4 +1,4 @@
-const CACHE_NAME = 'charge-calc-v1';
+const CACHE_NAME = 'charge-calc-v2';
 const URLS_TO_CACHE = ['./charge-calc.html'];
 
 self.addEventListener('install', function(event) {
@@ -24,8 +24,12 @@ self.addEventListener('activate', function(event) {
 
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
+    fetch(event.request).then(function(response) {
+      var clone = response.clone();
+      caches.open(CACHE_NAME).then(function(cache) { cache.put(event.request, clone); });
+      return response;
+    }).catch(function() {
+      return caches.match(event.request);
     })
   );
 });
