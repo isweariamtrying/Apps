@@ -1,0 +1,22 @@
+{
+  "name": "World Cup 2026 MDT Schedule",
+  "short_name": "WC 2026",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111e16",
+  "theme-color": "#111e16",
+  "description": "Offline static schedule for World Cup matches in Mountain Time.",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/1b2e22/00e676?text=WC26",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/1b2e22/00e676?text=World+Cup",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
