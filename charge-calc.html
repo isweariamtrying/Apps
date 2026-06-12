@@ -46,7 +46,7 @@ input[type=number]:focus{outline:none;border-color:#4ecca3;}
 <div class="specs">
 Battery: 21S12P 21700 · 48Ah · 63V–88.2V<br>
 Charger: 5A CC/CV · 80% target ≈ 83.2V<br>
-CC phase only (linear estimate to 80%)
+NMC discharge curve lookup (calibrated to real-world data)
 </div>
 <script>
 // 21S Li-ion pack parameters
@@ -57,12 +57,46 @@ var V_80 = 3.96 * CELLS;  // ~83.2V (80% SOC — approx end of CC phase)
 var AH = 48;
 var CHARGER_A = 5;
 
-// Approximate SOC from voltage (linear interpolation — reasonable for Li-ion in mid-range)
-// More accurate would be a lookup table, but for planning purposes linear is within ~5%
-function voltToSoc(v) {
-  if (v <= V_MIN) return 0;
-  if (v >= V_MAX) return 100;
-  return ((v - V_MIN) / (V_MAX - V_MIN)) * 100;
+// NMC 21700 cell voltage-vs-SOC lookup table (per cell, typical discharge curve)
+// Calibrated against real-world data: 73V pack (3.476V/cell) ≈ 18% SOC
+// Sources: typical NMC 21700 datasheet curves (Samsung 50E / Molicel P42A class)
+var SOC_TABLE = [
+  // [cell voltage, SOC %]
+  [3.00, 0],
+  [3.10, 2],
+  [3.20, 5],
+  [3.30, 9],
+  [3.40, 14],
+  [3.48, 18],   // calibrated: 73V pack = 3.476V/cell ≈ 18%
+  [3.55, 25],
+  [3.60, 30],
+  [3.65, 38],
+  [3.70, 45],
+  [3.75, 52],
+  [3.80, 60],
+  [3.85, 67],
+  [3.90, 74],
+  [3.96, 80],   // 80% target — end of CC phase
+  [4.00, 85],
+  [4.05, 90],
+  [4.10, 94],
+  [4.15, 97],
+  [4.20, 100]
+];
+
+// Interpolate SOC from pack voltage using the lookup table
+function voltToSoc(packV) {
+  var cellV = packV / CELLS;
+  if (cellV <= SOC_TABLE[0][0]) return 0;
+  if (cellV >= SOC_TABLE[SOC_TABLE.length-1][0]) return 100;
+  for (var i = 1; i < SOC_TABLE.length; i++) {
+    if (cellV <= SOC_TABLE[i][0]) {
+      var v0 = SOC_TABLE[i-1][0], s0 = SOC_TABLE[i-1][1];
+      var v1 = SOC_TABLE[i][0], s1 = SOC_TABLE[i][1];
+      return s0 + (s1 - s0) * (cellV - v0) / (v1 - v0);
+    }
+  }
+  return 100;
 }
 
 function calc() {
