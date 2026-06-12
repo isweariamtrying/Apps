@@ -25,6 +25,7 @@
         header { text-align: center; padding: 20px 0; border-bottom: 1px solid #2d4a37; margin-bottom: 20px; }
         h1 { font-size: 1.5rem; margin-bottom: 5px; color: var(--accent); }
         .pwa-status { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .stage-header { font-size: 1.3rem; font-weight: bold; text-align: center; margin: 30px 0 15px 0; color: var(--text-main); padding: 10px; border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); text-transform: uppercase; letter-spacing: 2px; }
         .date-header { font-size: 1.1rem; font-weight: bold; margin: 20px 0 10px 0; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 8px; }
         .match-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #253f2f; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         .match-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
@@ -46,55 +47,641 @@
     </header>
 
     <main id="schedule">
-        <div class="date-header">Thursday, June 11</div>
+
+        <div class="stage-header">Group Stage</div>
+
+        <!-- June 11 -->
+        <div class="date-header">Wednesday, June 11</div>
         <div class="match-card">
             <div class="match-meta"><span>Group A</span><span>1:00 PM MDT</span></div>
             <div class="match-teams"><span>Mexico</span><span class="vs">vs</span><span>South Africa</span></div>
-            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fox">FOX / Tubi</span></div>
+            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
         <div class="match-card">
             <div class="match-meta"><span>Group A</span><span>8:00 PM MDT</span></div>
             <div class="match-teams"><span>South Korea</span><span class="vs">vs</span><span>Czechia</span></div>
-            <div class="match-footer"><div class="venue">Guadalajara Stadium</div><span class="stream-tag tag-fs1">FS1 / Fox One</span></div>
+            <div class="match-footer"><div class="venue">Guadalajara Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
         </div>
 
-        <div class="date-header">Friday, June 12</div>
+        <!-- June 12 -->
+        <div class="date-header">Thursday, June 12</div>
         <div class="match-card">
             <div class="match-meta"><span>Group B</span><span>1:00 PM MDT</span></div>
-            <div class="match-teams"><span>Canada</span><span class="vs">vs</span><span>Bosnia & Herzo.</span></div>
-            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fox">FOX / Fox One</span></div>
+            <div class="match-teams"><span>Canada</span><span class="vs">vs</span><span>Bosnia & Herz.</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
         <div class="match-card">
             <div class="match-meta"><span>Group D</span><span>7:00 PM MDT</span></div>
             <div class="match-teams"><span>United States</span><span class="vs">vs</span><span>Paraguay</span></div>
-            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX / Tubi</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
 
-        <div class="date-header">Saturday, June 13</div>
+        <!-- June 13 -->
+        <div class="date-header">Friday, June 13</div>
         <div class="match-card">
             <div class="match-meta"><span>Group B</span><span>1:00 PM MDT</span></div>
             <div class="match-teams"><span>Qatar</span><span class="vs">vs</span><span>Switzerland</span></div>
-            <div class="match-footer"><div class="venue">San Francisco Stadium</div><span class="stream-tag tag-fox">FOX / Fox One</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
         <div class="match-card">
             <div class="match-meta"><span>Group C</span><span>4:00 PM MDT</span></div>
             <div class="match-teams"><span>Brazil</span><span class="vs">vs</span><span>Morocco</span></div>
-            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fs1">FS1 / Fox One</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
         <div class="match-card">
             <div class="match-meta"><span>Group C</span><span>7:00 PM MDT</span></div>
             <div class="match-teams"><span>Haiti</span><span class="vs">vs</span><span>Scotland</span></div>
-            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fs1">FS1 / Fox One</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
         <div class="match-card">
             <div class="match-meta"><span>Group D</span><span>10:00 PM MDT</span></div>
             <div class="match-teams"><span>Australia</span><span class="vs">vs</span><span>Türkiye</span></div>
-            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fs1">FS1 / Fox One</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fox">FOX</span></div>
         </div>
+
+        <!-- June 14 -->
+        <div class="date-header">Saturday, June 14</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>Germany</span><span class="vs">vs</span><span>Curaçao</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>Netherlands</span><span class="vs">vs</span><span>Japan</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>Ivory Coast</span><span class="vs">vs</span><span>Ecuador</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Tunisia</span><span class="vs">vs</span><span>Sweden</span></div>
+            <div class="match-footer"><div class="venue">Monterrey Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 15 -->
+        <div class="date-header">Sunday, June 15</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>10:00 AM MDT</span></div>
+            <div class="match-teams"><span>Spain</span><span class="vs">vs</span><span>Cape Verde</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Belgium</span><span class="vs">vs</span><span>Egypt</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Saudi Arabia</span><span class="vs">vs</span><span>Uruguay</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>Iran</span><span class="vs">vs</span><span>New Zealand</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 16 -->
+        <div class="date-header">Monday, June 16</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>France</span><span class="vs">vs</span><span>Senegal</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Iraq</span><span class="vs">vs</span><span>Norway</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>Argentina</span><span class="vs">vs</span><span>Algeria</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>10:00 PM MDT</span></div>
+            <div class="match-teams"><span>Austria</span><span class="vs">vs</span><span>Jordan</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 17 -->
+        <div class="date-header">Tuesday, June 17</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>Portugal</span><span class="vs">vs</span><span>DR Congo</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>England</span><span class="vs">vs</span><span>Croatia</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>Ghana</span><span class="vs">vs</span><span>Panama</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Uzbekistan</span><span class="vs">vs</span><span>Colombia</span></div>
+            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 18 -->
+        <div class="date-header">Wednesday, June 18</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group A</span><span>10:00 AM MDT</span></div>
+            <div class="match-teams"><span>Czechia</span><span class="vs">vs</span><span>South Africa</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group B</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Switzerland</span><span class="vs">vs</span><span>Bosnia & Herz.</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group B</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Canada</span><span class="vs">vs</span><span>Qatar</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group A</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>Mexico</span><span class="vs">vs</span><span>South Korea</span></div>
+            <div class="match-footer"><div class="venue">Guadalajara Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- June 19 -->
+        <div class="date-header">Thursday, June 19</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group D</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>United States</span><span class="vs">vs</span><span>Australia</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group C</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Scotland</span><span class="vs">vs</span><span>Morocco</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group C</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>Brazil</span><span class="vs">vs</span><span>Haiti</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group D</span><span>10:00 PM MDT</span></div>
+            <div class="match-teams"><span>Türkiye</span><span class="vs">vs</span><span>Paraguay</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 20 -->
+        <div class="date-header">Friday, June 20</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>Netherlands</span><span class="vs">vs</span><span>Sweden</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>Germany</span><span class="vs">vs</span><span>Ivory Coast</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>Ecuador</span><span class="vs">vs</span><span>Curaçao</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>10:00 PM MDT</span></div>
+            <div class="match-teams"><span>Tunisia</span><span class="vs">vs</span><span>Japan</span></div>
+            <div class="match-footer"><div class="venue">Monterrey Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 21 -->
+        <div class="date-header">Saturday, June 21</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>10:00 AM MDT</span></div>
+            <div class="match-teams"><span>Spain</span><span class="vs">vs</span><span>Saudi Arabia</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Belgium</span><span class="vs">vs</span><span>Iran</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Uruguay</span><span class="vs">vs</span><span>Cape Verde</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>New Zealand</span><span class="vs">vs</span><span>Egypt</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 22 -->
+        <div class="date-header">Sunday, June 22</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>Argentina</span><span class="vs">vs</span><span>Austria</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>France</span><span class="vs">vs</span><span>Iraq</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>Norway</span><span class="vs">vs</span><span>Senegal</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>9:00 PM MDT</span></div>
+            <div class="match-teams"><span>Jordan</span><span class="vs">vs</span><span>Algeria</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 23 -->
+        <div class="date-header">Monday, June 23</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>Portugal</span><span class="vs">vs</span><span>Uzbekistan</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>England</span><span class="vs">vs</span><span>Ghana</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>Panama</span><span class="vs">vs</span><span>Croatia</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Colombia</span><span class="vs">vs</span><span>DR Congo</span></div>
+            <div class="match-footer"><div class="venue">Guadalajara Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 24 -->
+        <div class="date-header">Tuesday, June 24</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group B</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Switzerland</span><span class="vs">vs</span><span>Canada</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group B</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Bosnia & Herz.</span><span class="vs">vs</span><span>Qatar</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group C</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Brazil</span><span class="vs">vs</span><span>Scotland</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group C</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>Morocco</span><span class="vs">vs</span><span>Haiti</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group A</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>Mexico</span><span class="vs">vs</span><span>Czechia</span></div>
+            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group A</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>South Korea</span><span class="vs">vs</span><span>South Africa</span></div>
+            <div class="match-footer"><div class="venue">Monterrey Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 25 -->
+        <div class="date-header">Wednesday, June 25</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>Ecuador</span><span class="vs">vs</span><span>Germany</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group E</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>Curaçao</span><span class="vs">vs</span><span>Ivory Coast</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>Tunisia</span><span class="vs">vs</span><span>Netherlands</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group F</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>Japan</span><span class="vs">vs</span><span>Sweden</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group D</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>United States</span><span class="vs">vs</span><span>Türkiye</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group D</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Paraguay</span><span class="vs">vs</span><span>Australia</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 26 -->
+        <div class="date-header">Thursday, June 26</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Norway</span><span class="vs">vs</span><span>France</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group I</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>Senegal</span><span class="vs">vs</span><span>Iraq</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>Uruguay</span><span class="vs">vs</span><span>Spain</span></div>
+            <div class="match-footer"><div class="venue">Guadalajara Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group H</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>Cape Verde</span><span class="vs">vs</span><span>Saudi Arabia</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>9:00 PM MDT</span></div>
+            <div class="match-teams"><span>New Zealand</span><span class="vs">vs</span><span>Belgium</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group G</span><span>9:00 PM MDT</span></div>
+            <div class="match-teams"><span>Egypt</span><span class="vs">vs</span><span>Iran</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- June 27 -->
+        <div class="date-header">Friday, June 27</div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>Panama</span><span class="vs">vs</span><span>England</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group L</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>Croatia</span><span class="vs">vs</span><span>Ghana</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>5:30 PM MDT</span></div>
+            <div class="match-teams"><span>Colombia</span><span class="vs">vs</span><span>Portugal</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group K</span><span>5:30 PM MDT</span></div>
+            <div class="match-teams"><span>DR Congo</span><span class="vs">vs</span><span>Uzbekistan</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Argentina</span><span class="vs">vs</span><span>Jordan</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>Group J</span><span>8:00 PM MDT</span></div>
+            <div class="match-teams"><span>Algeria</span><span class="vs">vs</span><span>Austria</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- KNOCKOUT STAGE -->
+        <div class="stage-header">Round of 32</div>
+
+        <!-- June 28 -->
+        <div class="date-header">Saturday, June 28</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>2nd Group A</span><span class="vs">vs</span><span>2nd Group B</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- June 29 -->
+        <div class="date-header">Sunday, June 29</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>1st Group C</span><span class="vs">vs</span><span>2nd Group F</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>2:30 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group E</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group F</span><span class="vs">vs</span><span>2nd Group C</span></div>
+            <div class="match-footer"><div class="venue">Monterrey Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- June 30 -->
+        <div class="date-header">Monday, June 30</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>2nd Group E</span><span class="vs">vs</span><span>2nd Group I</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group I</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group A</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 1 -->
+        <div class="date-header">Tuesday, July 1</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>10:00 AM MDT</span></div>
+            <div class="match-teams"><span>1st Group L</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group G</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group D</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">San Francisco Bay Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 2 -->
+        <div class="date-header">Wednesday, July 2</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group H</span><span class="vs">vs</span><span>2nd Group J</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>5:00 PM MDT</span></div>
+            <div class="match-teams"><span>2nd Group K</span><span class="vs">vs</span><span>2nd Group L</span></div>
+            <div class="match-footer"><div class="venue">Toronto Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>9:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group B</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fs1">FS1</span></div>
+        </div>
+
+        <!-- July 3 -->
+        <div class="date-header">Thursday, July 3</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>12:00 PM MDT</span></div>
+            <div class="match-teams"><span>2nd Group D</span><span class="vs">vs</span><span>2nd Group G</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>4:00 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group J</span><span class="vs">vs</span><span>2nd Group H</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R32</span><span>7:30 PM MDT</span></div>
+            <div class="match-teams"><span>1st Group K</span><span class="vs">vs</span><span>3rd Place</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- ROUND OF 16 -->
+        <div class="stage-header">Round of 16</div>
+
+        <!-- July 4 -->
+        <div class="date-header">Friday, July 4</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>11:00 AM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Houston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Philadelphia Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 5 -->
+        <div class="date-header">Saturday, July 5</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Mexico City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 6 -->
+        <div class="date-header">Sunday, July 6</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>6:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Seattle Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 7 -->
+        <div class="date-header">Monday, July 7</div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>10:00 AM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>R16</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">BC Place Vancouver</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- QUARTERFINALS -->
+        <div class="stage-header">Quarterfinals</div>
+
+        <!-- July 9 -->
+        <div class="date-header">Wednesday, July 9</div>
+        <div class="match-card">
+            <div class="match-meta"><span>QF</span><span>2:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Boston Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 10 -->
+        <div class="date-header">Thursday, July 10</div>
+        <div class="match-card">
+            <div class="match-meta"><span>QF</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Los Angeles Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 11 -->
+        <div class="date-header">Friday, July 11</div>
+        <div class="match-card">
+            <div class="match-meta"><span>QF</span><span>3:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Miami Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+        <div class="match-card">
+            <div class="match-meta"><span>QF</span><span>7:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Kansas City Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- SEMIFINALS -->
+        <div class="stage-header">Semifinals</div>
+
+        <!-- July 14 -->
+        <div class="date-header">Monday, July 14</div>
+        <div class="match-card">
+            <div class="match-meta"><span>SF</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Dallas Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- July 15 -->
+        <div class="date-header">Tuesday, July 15</div>
+        <div class="match-card">
+            <div class="match-meta"><span>SF</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">Atlanta Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
+        <!-- FINAL -->
+        <div class="stage-header">Final</div>
+
+        <!-- July 19 -->
+        <div class="date-header">Saturday, July 19</div>
+        <div class="match-card">
+            <div class="match-meta"><span>FINAL</span><span>1:00 PM MDT</span></div>
+            <div class="match-teams"><span>TBD</span><span class="vs">vs</span><span>TBD</span></div>
+            <div class="match-footer"><div class="venue">NY/NJ MetLife Stadium</div><span class="stream-tag tag-fox">FOX</span></div>
+        </div>
+
     </main>
 
     <script>
-        // Register the external service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
