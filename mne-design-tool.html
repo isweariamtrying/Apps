@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNE Design Tool</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#1a1a2e;color:#eee;display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:280px;background:#16213e;padding:15px;font-size:12px;overflow-y:auto;border-right:1px solid #333;display:flex;flex-direction:column;gap:10px;}
+.sidebar h2{color:#00d4ff;font-size:14px;margin-bottom:4px;}
+.sidebar h3{color:#00d4ff;font-size:12px;margin:8px 0 4px;cursor:pointer;user-select:none;}
+.sidebar h3:before{content:"▸ ";font-size:11px;}
+.sidebar h3.open:before{content:"▾ ";}
+.palette-section{display:none;}
+.palette-section.open{display:block;}
+.palette-item{background:#0d1b3e;border:1px solid #333;border-radius:6px;padding:8px 10px;margin-bottom:4px;cursor:grab;font-size:12px;display:flex;justify-content:space-between;align-items:center;}
+.palette-item:hover{border-color:#00d4ff;background:#0f2a5e;}
+.palette-item .info{color:#888;font-size:11px;}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;}
+canvas{display:block;background:#111827;}
+.toolbar{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:10;}
+.toolbar button{padding:6px 14px;font-size:12px;background:#0f3460;color:#eee;border:1px solid #333;border-radius:6px;cursor:pointer;}
+.toolbar button:hover{background:#1a4a8a;}
+.toolbar button.active{background:#e94560;border-color:#e94560;}
+.status-bar{position:absolute;bottom:0;left:0;right:0;background:#0d1b3e;border-top:1px solid #333;padding:6px 12px;font-size:11px;color:#888;display:flex;gap:20px;z-index:10;}
+.props-panel{position:absolute;top:10px;right:10px;width:240px;background:#16213e;border:1px solid #333;border-radius:8px;padding:12px;font-size:12px;z-index:10;display:none;}
+.props-panel h3{color:#00d4ff;margin-bottom:8px;font-size:13px;}
+.props-panel label{display:block;margin:4px 0 2px;color:#aaa;}
+.props-panel input,.props-panel select{width:100%;padding:5px;font-size:12px;border-radius:4px;border:1px solid #444;background:#0d1b3e;color:#eee;margin-bottom:6px;}
+.props-panel .port-summary{background:#0d1b3e;border-radius:4px;padding:6px 8px;margin-top:6px;font-size:11px;line-height:1.6;}
+.pass{color:#4ecca3;}.fail{color:#e94560;}
+.help-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:100;display:none;justify-content:center;align-items:center;}
+.help-overlay.open{display:flex;}
+.help-box{background:#16213e;border:1px solid #444;border-radius:10px;width:640px;max-height:80vh;overflow-y:auto;padding:24px 28px;color:#ddd;font-size:13px;line-height:1.7;position:relative;}
+.help-box h2{color:#00d4ff;font-size:16px;margin:0 0 12px;}
+.help-box h3{color:#4ecca3;font-size:13px;margin:14px 0 4px;}
+.help-box kbd{background:#0d1b3e;border:1px solid #555;border-radius:3px;padding:1px 6px;font-size:11px;font-family:monospace;color:#eee;}
+.help-box .close-btn{position:absolute;top:12px;right:16px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;}
+.help-box .close-btn:hover{color:#eee;}
+.help-box table{width:100%;border-collapse:collapse;margin:6px 0 10px;}
+.help-box td{padding:3px 8px;border-bottom:1px solid #1e293b;vertical-align:top;}
+.help-box td:first-child{white-space:nowrap;color:#e9a045;width:40%;}
+.ref-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:100;display:none;justify-content:center;align-items:center;}
+.ref-overlay.open{display:flex;}
+.ref-box{background:#16213e;border:1px solid #444;border-radius:10px;width:560px;max-height:85vh;overflow-y:auto;padding:20px 24px;color:#ddd;font-size:12px;line-height:1.6;position:relative;}
+.ref-box h2{color:#00d4ff;font-size:15px;margin:0 0 10px;}
+.ref-box h3{color:#00d4ff;font-size:12px;margin:10px 0 4px;cursor:pointer;user-select:none;}
+.ref-box h3:before{content:"▸ ";font-size:11px;}
+.ref-box h3.open:before{content:"▾ ";}
+.ref-box .qr-section{display:none;overflow:hidden;}
+.ref-box .qr-section.open{display:block;}
+.ref-box table{width:100%;border-collapse:collapse;margin:4px 0 8px;}
+.ref-box th{text-align:left;color:#e94560;padding:2px 5px;border-bottom:1px solid #333;font-size:11px;}
+.ref-box td{padding:2px 5px;border-bottom:1px solid #222;font-size:11px;}
+.ref-box .close-btn{position:absolute;top:10px;right:14px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;}
+.ref-box .close-btn:hover{color:#eee;}
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+<h2>MNE Design Tool</h2>
+<div style="margin-bottom:8px;">
+<button onclick="saveDesign()" style="padding:4px 10px;font-size:11px;background:#0f3460;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;">Save</button>
+<select id="loadSelect" style="padding:4px;font-size:11px;border-radius:4px;border:1px solid #444;background:#0d1b3e;color:#eee;width:120px;"><option value="">-- Load --</option></select>
+<button onclick="loadDesign()" style="padding:4px 10px;font-size:11px;background:#0f3460;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;">Load</button>
+<button onclick="deleteSavedDesign()" style="padding:4px 10px;font-size:11px;background:#e94560;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;" title="Delete selected save">🗑</button>
+</div>
+<div style="margin-bottom:8px;">
+<button onclick="exportDesign()" style="padding:4px 10px;font-size:11px;background:#1a4a2e;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;">Export</button>
+<button onclick="document.getElementById('importFile').click()" style="padding:4px 10px;font-size:11px;background:#1a4a2e;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;">Import</button>
+<input type="file" id="importFile" accept=".json" style="display:none;" onchange="importDesign(event)">
+</div>
+<h3 onclick="togglePal(this)">Zones</h3>
+<div class="palette-section" id="palZones">
+<div class="palette-item" draggable="true" ondragstart="dragStart(event,'zone','MDF')">MDF<span class="info">Main Distribution</span></div>
+<div class="palette-item" draggable="true" ondragstart="dragStart(event,'zone','IDF')">IDF<span class="info">Intermediate Distribution</span></div>
+<div class="palette-item" draggable="true" ondragstart="dragStart(event,'zone','Server')">Server Room<span class="info">Server closet</span></div>
+</div>
+<h3 onclick="togglePal(this)">Generic</h3>
+<div class="palette-section" id="palGeneric">
+<div class="palette-item" draggable="true" ondragstart="dragStart(event,'generic','Generic')">Generic Device<span class="info">Patch panel, etc.</span></div>
+<div class="palette-item" draggable="true" ondragstart="dragStart(event,'poedevice','PoEDevice')">PoE Device<span class="info">IP phone, etc.</span></div>
+</div>
+<h3 onclick="togglePal(this)">MX Appliances</h3>
+<div class="palette-section" id="palFirewalls"></div>
+<h3 onclick="togglePal(this)">Switches</h3>
+<div class="palette-section" id="palSwitches"></div>
+<h3 onclick="togglePal(this)">Access Points</h3>
+<div class="palette-section" id="palAPs"></div>
+<h3 onclick="togglePal(this)">Cameras</h3>
+<div class="palette-section" id="palCameras"></div>
+<h3 onclick="togglePal(this)">MV Mounts</h3>
+<div class="palette-section" id="palMvMounts" style="font-size:11px;line-height:1.6;">
+<div style="color:#00d4ff;font-size:11px;font-weight:bold;margin:4px 0 2px;">Gen3 (MV13/23/33/53X/63/73/93)</div>
+<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+<tr><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">SKU</th><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">Type</th><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">Cameras</th></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-28</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Pole Mount</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3 + MV53X</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-38</td><td style="padding:2px 4px;border-bottom:1px solid #222;">L-Bracket</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-48</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Wall Arm</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-58</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Junction Box</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3 + MV53X</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-68</td><td style="padding:2px 4px;border-bottom:1px solid #222;">T-Rail (deep/shallow)</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-78</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Telescoping Pendant</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-88</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Corner Mount</td><td style="padding:2px 4px;border-bottom:1px solid #222;">All Gen3 + MV53X</td></tr>
+</table>
+<div style="color:#00d4ff;font-size:11px;font-weight:bold;margin:4px 0 2px;">Gen2 (MV2/12/22/32/52/72)</div>
+<table style="width:100%;border-collapse:collapse;font-size:11px;">
+<tr><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">SKU</th><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">Type</th><th style="text-align:left;color:#e94560;padding:2px 4px;border-bottom:1px solid #333;">Cameras</th></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-10</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Wall Arm</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV72</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-20</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Pole Mount</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV22, MV72</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-21</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Pole Mount</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV52</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-30</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Wall Arm</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV12, MV32</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-MV-40</td><td style="padding:2px 4px;border-bottom:1px solid #222;">Telescoping Pendant</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV12, MV32</td></tr>
+<tr><td style="padding:2px 4px;border-bottom:1px solid #222;">MA-MNT-CLG-1</td><td style="padding:2px 4px;border-bottom:1px solid #222;">T-Rail Clip</td><td style="padding:2px 4px;border-bottom:1px solid #222;">MV12, MV22, MV32</td></tr>
+</table>
+<div style="color:#888;font-size:10px;margin-top:4px;">All cameras include wall/ceiling mount plate in box.<br>Sources: <a href="https://documentation.meraki.com/MV/Install_and_Get_Started/Installation_Guides/Gen3_Meraki_MV_Mounting_Options_and_Guidelines" target="_blank" style="color:#4ecca3;">Gen3</a> | <a href="https://documentation.meraki.com/MV/Install_and_Get_Started/Installation_Guides/Gen2_MV_Mounting_Options_and_Guidelines" target="_blank" style="color:#4ecca3;">Gen2</a></div>
+</div>
+<h3 onclick="togglePal(this)">Sensors</h3>
+<div class="palette-section" id="palSensors"></div>
+<div id="fileNameGen" style="border-top:1px solid #333;padding-top:10px;margin-top:10px;">
+<h3 onclick="togglePal(this)">File Name Generator</h3>
+<div class="palette-section">
+<textarea id="fnInput" placeholder="Paste block here, e.g.:&#10;Opportunity#: 15360987&#10;DRT Project ID: 153944&#10;Name: LOCKHART INN" style="width:100%;height:60px;font-size:11px;padding:6px;border-radius:4px;border:1px solid #444;background:#0d1b3e;color:#eee;resize:vertical;"></textarea>
+<div style="display:flex;gap:6px;margin-top:4px;align-items:center;">
+<label style="font-size:10px;color:#aaa;">Opt</label><input type="number" id="fnOpt" value="1" min="1" style="width:36px;padding:3px;font-size:11px;border-radius:4px;border:1px solid #444;background:#0d1b3e;color:#eee;">
+<label style="font-size:10px;color:#aaa;">Ver</label><input type="number" id="fnVer" value="1" min="1" style="width:36px;padding:3px;font-size:11px;border-radius:4px;border:1px solid #444;background:#0d1b3e;color:#eee;">
+</div>
+<button onclick="generateFileName()" style="padding:4px 10px;font-size:11px;background:#0f3460;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;margin-top:4px;">Generate</button>
+<button onclick="copyFileName()" style="padding:4px 10px;font-size:11px;background:#1a4a2e;color:#eee;border:1px solid #333;border-radius:4px;cursor:pointer;margin-top:4px;">Copy</button>
+<div id="fnOutput" style="font-size:11px;color:#4ecca3;margin-top:6px;word-break:break-all;user-select:all;"></div>
+</div>
+</div>
+<div id="summaryPanel" style="margin-top:auto;border-top:1px solid #333;padding-top:10px;">
+<h3 class="open" style="cursor:default;">Summary</h3>
+<div id="summaryContent" style="font-size:11px;color:#aaa;line-height:1.8;">Drop devices to begin</div>
+</div>
+</div>
+<div class="canvas-wrap">
+<div class="toolbar">
+<button id="btnSelect" class="active" onclick="setMode('select')">Select</button>
+<button id="btnConnect" onclick="setMode('connect')">Connect</button>
+<span style="border-left:1px solid #444;margin:0 4px;"></span>
+<button onclick="undo()">↩ Undo</button>
+<button onclick="redo()">↪ Redo</button>
+<span style="border-left:1px solid #444;margin:0 4px;"></span>
+<button onclick="fitToView()">Fit View</button>
+<button onclick="zoom=1;panX=0;panY=0;draw();document.getElementById('zoomLbl').textContent='100%';">Reset Zoom</button>
+<span id="zoomLbl" style="color:#aaa;font-size:11px;margin-left:4px;">100%</span>
+<span style="border-left:1px solid #444;margin:0 4px;"></span>
+<button onclick="toggleTheme()" id="themeBtn">☀ Light</button>
+<button onclick="exportImage()">📷 Export Image</button>
+<button onclick="toggleRefOverlay('meraki')">MNE Ref</button>
+<button onclick="toggleRefOverlay('fortinet')">ENE/ENR/MNR Ref</button>
+<button onclick="toggleHelp()">? Help</button>
+</div>
+<canvas id="canvas"></canvas>
+<div class="status-bar">
+<span id="statusMode">Mode: Select</span>
+<span id="statusInfo">Drag devices from sidebar</span>
+</div>
+</div>
+<div class="props-panel" id="propsPanel">
+<h3 id="propsTitle">Properties</h3>
+<div id="propsContent"></div>
+</div>
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)toggleHelp()">
+<div class="help-box">
+<button class="close-btn" onclick="toggleHelp()">&times;</button>
+<h2>MNE Design Tool — Help</h2>
+<h3>Getting Started</h3>
+Drag devices from the sidebar onto the canvas to build your network design. Use <kbd>Connect</kbd> mode to wire them together. The summary panel (bottom-left) updates automatically with a BOM and warnings.
+<h3>Canvas Navigation</h3>
+<table>
+<tr><td>Pan</td><td>Left-click drag on empty canvas, or hold <kbd>Space</kbd> + drag</td></tr>
+<tr><td>Zoom</td><td>Mouse wheel (zooms toward cursor, 15%–300%)</td></tr>
+<tr><td>Fit View</td><td>Toolbar button — fits all content in view</td></tr>
+<tr><td>Reset Zoom</td><td>Toolbar button — resets to 100% at origin</td></tr>
+</table>
+<h3>Modes (Toolbar)</h3>
+<table>
+<tr><td><kbd>Select</kbd></td><td>Default mode. Click nodes/zones/connections to select and see properties. Drag to move. Press <kbd>Delete</kbd> to remove the selected item.</td></tr>
+<tr><td><kbd>Connect</kbd></td><td>Click a source node, then click a target node to create a connection. Defaults to Ethernet (blue). Multiple connections between the same pair are supported (e.g. for LAGs) — they render as parallel offset lines.</td></tr>
+</table>
+<h3>Connection Media Types</h3>
+Click a connection to select it, then choose the media type in the properties panel. Each type has a distinct color:
+<table>
+<tr><td style="color:#5b9bd5;">Ethernet (blue)</td><td>Default — copper/Cat6</td></tr>
+<tr><td style="color:#f0c040;">SMF (yellow)</td><td>Single-mode fiber</td></tr>
+<tr><td style="color:#e94560;">MMF (red)</td><td>Multi-mode fiber</td></tr>
+<tr><td style="color:#4ecca3;">GameChanger (green)</td><td>GameChanger links</td></tr>
+</table>
+Connections marked as "Customer Provided" display as dashed lines with a [CP] prefix.
+You can also add a free-text label (e.g. "Cat6", "OS2") that displays on the connection alongside the media type.
+<h3>Devices</h3>
+<table>
+<tr><td>MX Appliances</td><td>Firewalls — shows throughput tier</td></tr>
+<tr><td>Switches</td><td>Access & aggregation switches. Stackable models auto-detect stacks when connected in the same zone.</td></tr>
+<tr><td>Access Points</td><td>Indoor/outdoor APs. Set quantity and antenna in properties.</td></tr>
+<tr><td>Cameras</td><td>MV cameras with PoE draw shown</td></tr>
+<tr><td>Sensors</td><td>MT sensors (no PoE — battery powered)</td></tr>
+<tr><td>Generic Device</td><td>Gray node for patch panels, UPS, etc. Connectable and nameable.</td></tr>
+<tr><td>PoE Device</td><td>Red node for IP phones, etc. Set name, quantity, and watts per device. Counts toward switch PoE load and port usage.</td></tr>
+</table>
+<h3>Zones</h3>
+Drag MDF, IDF, or Server Room zones onto the canvas to group devices. Drag the zone header to move it, drag the bottom-right corner to resize. Zones show power totals for contained devices in properties.
+<h3>Stacking</h3>
+Connect two or more stackable switches of the same family (MS150, C9300L, C9300, C9300X) inside the same zone. A dashed blue outline appears showing combined port pool, PoE budget, and uplink count. Stack cables are auto-added to the BOM.
+<h3>Switch Properties</h3>
+<table>
+<tr><td>NIM Module</td><td>Modular switches (C9300, C9300X) can add a NIM for extra uplinks.</td></tr>
+<tr><td>Swap Model</td><td>Change a switch to a different model without losing connections. All connections, media types, and CP flags are preserved.</td></tr>
+<tr><td>AGG Toggle</td><td>Marks a switch as aggregation — all ports become uplinks in the combined pool.</td></tr>
+<tr><td>No Stack (HA)</td><td>Prevents a stackable switch from auto-stacking with neighbors (e.g. HA pairs in the same zone).</td></tr>
+<tr><td>Port Bars</td><td>Green bar = port usage, orange bar = PoE load. Turns red above 80%.</td></tr>
+</table>
+<h3>Shortcuts</h3>
+<table>
+<tr><td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td><td>Remove selected node(s), connection(s), or zone</td></tr>
+<tr><td><kbd>Shift</kbd> + click</td><td>Multi-select nodes or connections (then drag to move all, or change properties as a group)</td></tr>
+<tr><td><kbd>Ctrl</kbd> + drag node</td><td>Clone device (increments name, keeps settings)</td></tr>
+<tr><td><kbd>Ctrl</kbd> + drag zone</td><td>Clone zone</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Redo</td></tr>
+</table>
+<h3>Save / Load / Export</h3>
+<table>
+<tr><td>Save / Load</td><td>Saves to browser localStorage. Use the sidebar controls.</td></tr>
+<tr><td>Export / Import</td><td>Downloads/uploads a .json file for sharing designs between users.</td></tr>
+</table>
+<h3>Reference Panels</h3>
+Use the <kbd>MNE Ref</kbd> and <kbd>ENE/ENR/MNR Ref</kbd> toolbar buttons to open quick-reference overlays with device specs, sizing tables, SFPs, licensing info, and more. Each panel has collapsible sections — click a heading to expand/collapse. Click the background or &times; to close.
+<h3>Export Image</h3>
+Click <kbd>📷 Export Image</kbd> in the toolbar to render the full design as a 2x resolution PNG with a white background. Prompts for a file name, then downloads the image. Useful for pasting into Visio or documentation.
+<h3>Theme</h3>
+Use the <kbd>☀ Light</kbd> / <kbd>🌙 Dark</kbd> button in the toolbar to toggle between light and dark mode.
+</div>
+</div>
+<div class="ref-overlay" id="merakiRefOverlay" onclick="if(event.target===this)toggleRefOverlay('meraki')">
+<div class="ref-box" id="merakiRefBox">
+<button class="close-btn" onclick="toggleRefOverlay('meraki')">&times;</button>
+<h2>MNE Reference</h2>
+<div id="merakiRefContent"></div>
+</div>
+</div>
+<div class="ref-overlay" id="fortinetRefOverlay" onclick="if(event.target===this)toggleRefOverlay('fortinet')">
+<div class="ref-box" id="fortinetRefBox">
+<button class="close-btn" onclick="toggleRefOverlay('fortinet')">&times;</button>
+<h2>ENE / ENR / MNR Reference</h2>
+<div id="fortinetRefContent"></div>
+</div>
+</div>
+</body>
+<script>
+// ===== DEVICE CATALOG =====
+// To add/remove devices: just add or delete a line in the appropriate array below.
+// Switches: id, label, access (port count), uplinks, uplinkType, poe (budget watts), power (max draw watts), stack (bool), modular (bool, optional), fiber (bool, optional)
+// APs: id, label, power, poe (af/at/bt), place (Indoor/Outdoor), extAnt (bool), antPerAP (count), antennas (array of SKUs)
+// Cameras: id, label, power, poe, place (Indoor/Outdoor/Indoor/Outdoor)
+// Firewalls: id, label, ports {wan, lan}, power, tier
+var catalog={
+firewalls:[
+{id:"MX68",label:"MX68",ports:{wan:2,lan:10},power:79,tier:"≤200M"},
+{id:"MX75",label:"MX75",ports:{wan:3,lan:12},power:96,tier:"≤500M"},
+{id:"MX85",label:"MX85",ports:{wan:4,lan:10},power:55,tier:"≤500M"},
+{id:"MX95",label:"MX95",ports:{wan:4,lan:6},power:200,tier:"≤1G"},
+{id:"MX105",label:"MX105",ports:{wan:4,lan:6},power:200,tier:"≤2G"},
+{id:"MX250",label:"MX250",ports:{wan:2,lan:24},power:190,tier:"≤2G"},
+{id:"MX450",label:"MX450",ports:{wan:2,lan:24},power:190,tier:"≤5G"}
+],
+switches:[
+// MS130 - no stacking
+{id:"MS130-8P",label:"MS130-8P",access:8,uplinks:2,uplinkType:"1G SFP",poe:120,power:128,stack:false,poeMax:30},
+{id:"MS130-8X",label:"MS130-8X",access:8,uplinks:2,uplinkType:"10G SFP+",poe:120,power:136,stack:false,poeMax:30,mgigPorts:2},
+{id:"MS130R-8P",label:"MS130R-8P",access:8,uplinks:2,uplinkType:"1G SFP",poe:240,power:260,stack:false,poeMax:30},
+{id:"MS130-24P",label:"MS130-24P",access:24,uplinks:4,uplinkType:"1G SFP",poe:370,power:406,stack:false,poeMax:30},
+{id:"MS130-24X",label:"MS130-24X",access:24,uplinks:4,uplinkType:"10G SFP+",poe:370,power:421,stack:false,poeMax:30,mgigPorts:6},
+{id:"MS130-48P",label:"MS130-48P",access:48,uplinks:4,uplinkType:"1G SFP",poe:740,power:803,stack:false,poeMax:30},
+{id:"MS130-48X",label:"MS130-48X",access:48,uplinks:4,uplinkType:"10G SFP+",poe:740,power:808,stack:false,poeMax:30,mgigPorts:8},
+// MS150 - stackable
+{id:"MS150-24P-4X",label:"MS150-24P",access:24,uplinks:4,uplinkType:"10G SFP+",poe:370,power:422,stack:true,poeMax:30},
+{id:"MS150-48FP-4X",label:"MS150-48FP",access:48,uplinks:4,uplinkType:"10G SFP+",poe:740,power:891,stack:true,poeMax:30},
+{id:"MS150-24MP-4X",label:"MS150-24MP",access:24,uplinks:4,uplinkType:"10G SFP+",poe:370,power:454,stack:true,poeMax:60,mgigPorts:8},
+{id:"MS150-48MP-4X",label:"MS150-48MP",access:48,uplinks:4,uplinkType:"10G SFP+",poe:740,power:933,stack:true,poeMax:60,mgigPorts:16},
+// C9300L - stackable (kit required)
+{id:"C9300L-24P-4X-M",label:"C9300L-24P-4X",access:24,uplinks:4,uplinkType:"10G SFP+",poe:720,power:244,stack:true,poeMax:30},
+{id:"C9300L-48P-4X-M",label:"C9300L-48P-4X",access:48,uplinks:4,uplinkType:"10G SFP+",poe:1220,power:599,stack:true,poeMax:30},
+{id:"C9300L-48UXG-4X-M",label:"C9300L-48UXG-4X",access:48,uplinks:4,uplinkType:"10G SFP+",poe:1390,power:933,stack:true,poeMax:60,mgigPorts:12},
+// C9300-M - stackable, modular uplinks
+{id:"C9300-24P-M",label:"C9300-24P",access:24,uplinks:0,uplinkType:"Modular",poe:720,power:244,stack:true,modular:true,poeMax:30},
+{id:"C9300-48P-M",label:"C9300-48P",access:48,uplinks:0,uplinkType:"Modular",poe:1152,power:599,stack:true,modular:true,poeMax:30},
+{id:"C9300-48S-M",label:"C9300-48S",access:48,uplinks:0,uplinkType:"Modular",poe:0,power:87,stack:true,modular:true,fiber:true,poeMax:0},
+// C9300X - stackable, modular uplinks
+{id:"C9300X-24HX-M",label:"C9300X-24HX",access:24,uplinks:0,uplinkType:"Modular",poe:1835,power:1050,stack:true,modular:true,poeMax:90,mgigPorts:24},
+{id:"C9300X-48HX-M",label:"C9300X-48HX",access:48,uplinks:0,uplinkType:"Modular",poe:1690,power:1050,stack:true,modular:true,poeMax:90,mgigPorts:48},
+{id:"C9300X-12Y-M",label:"C9300X-12Y",access:12,uplinks:0,uplinkType:"Modular",poe:0,power:74,stack:true,modular:true,fiber:true,poeMax:0},
+{id:"C9300X-24Y-M",label:"C9300X-24Y",access:24,uplinks:0,uplinkType:"Modular",poe:0,power:87,stack:true,modular:true,fiber:true,poeMax:0}
+],
+aps:[
+// Wi-Fi 6
+{id:"MR36",label:"MR36",power:15,poe:"af",place:"Indoor"},
+{id:"MR36H",label:"MR36H",power:30,poe:"at",place:"Indoor"},
+{id:"MR46",label:"MR46",power:30,poe:"at",place:"Indoor"},
+{id:"MR46E",label:"MR46E",power:30,poe:"at",extAnt:true,antPerAP:1,antennas:["MA-ANT-3-A6","MA-ANT-3-D6","MA-ANT-3-E6","MA-ANT-3-F6"],place:"Indoor"},
+{id:"MR76",label:"MR76",power:15,poe:"af",extAnt:true,antPerAP:2,antennas:["MA-ANT-20","MA-ANT-25","MA-ANT-27"],outdoor:true,place:"Outdoor"},
+{id:"MR78",label:"MR78",power:15,poe:"af",place:"Outdoor"},
+{id:"MR86",label:"MR86",power:30,poe:"at",extAnt:true,antPerAP:2,antennas:["MA-ANT-20","MA-ANT-25","MA-ANT-27"],outdoor:true,place:"Outdoor"},
+// Wi-Fi 6E
+{id:"MR57",label:"MR57",power:40,poe:"bt",place:"Indoor"},
+// Wi-Fi 7
+{id:"CW9172I",label:"CW9172I",power:25.5,poe:"at",place:"Indoor"},
+{id:"CW9172H",label:"CW9172H",power:32,poe:"bt",place:"Indoor"},
+{id:"CW9176I",label:"CW9176I",power:39,poe:"bt",place:"Indoor"},
+{id:"CW9176D1",label:"CW9176D1",power:39,poe:"bt",place:"Indoor"},
+{id:"CW9178I",label:"CW9178I",power:47,poe:"bt",place:"Indoor"}
+],
+cameras:[
+{id:"MV2",label:"MV2",power:12.95,poe:"af",place:"Indoor"},
+{id:"MV13M",label:"MV13M",power:12.95,poe:"af",place:"Indoor"},
+{id:"MV23M",label:"MV23M",power:25.5,poe:"at",place:"Indoor"},
+{id:"MV23X",label:"MV23X",power:25.5,poe:"at",place:"Indoor"},
+{id:"MV32",label:"MV32",power:12.95,poe:"af",place:"Indoor"},
+{id:"MV33",label:"MV33",power:12.95,poe:"af",place:"Indoor"},
+{id:"MV33M",label:"MV33M",power:12.95,poe:"af",place:"Indoor"},
+{id:"MV52",label:"MV52",power:25.5,poe:"at",place:"Outdoor"},
+{id:"MV53X",label:"MV53X",power:30,poe:"at",place:"Outdoor"},
+{id:"MV63",label:"MV63",power:25.5,poe:"at",place:"Outdoor"},
+{id:"MV63X",label:"MV63X",power:25.5,poe:"at",place:"Outdoor"},
+{id:"MV72",label:"MV72",power:23.4,poe:"at",place:"Outdoor"},
+{id:"MV73M",label:"MV73M",power:25.5,poe:"at",place:"Outdoor"},
+{id:"MV73X",label:"MV73X",power:25.5,poe:"at",place:"Outdoor"},
+{id:"MV93",label:"MV93",power:25.5,poe:"at",place:"Indoor/Outdoor"},
+{id:"MV93X",label:"MV93X",power:25.5,poe:"at",place:"Indoor/Outdoor"}
+],
+sensors:[
+{id:"MT10",label:"MT10",power:0,desc:"Temperature & Humidity"},
+{id:"MT11",label:"MT11",power:0,desc:"Probe Sensor"},
+{id:"MT12",label:"MT12",power:0,desc:"Water Detection"},
+{id:"MT14",label:"MT14",power:0,desc:"Indoor Air Quality"},
+{id:"MT20",label:"MT20",power:0,desc:"Open/Close Detection"},
+{id:"MT30",label:"MT30",power:0,desc:"Smart Automation Button"}
+]
+};
+
+// ===== STATE =====
+var nodes=[],connections=[],zones=[],nextId=1,nextZoneId=1;
+var darkMode=true;
+var theme={
+dark:{bg:"#111827",grid:"#1e293b",nodeBorder:"#fff",nodeText:"#eee",subText:"#888",connLine:"#aaa",connLabel:"#aaa",connLabelBg:"#111827",zoneFill:"#0d1b3e88",zoneStroke:"#334155",zoneText:"#00d4ff",warnBar:"#222",selectStroke:"#00d4ff"},
+light:{bg:"#ffffff",grid:"#e0e0e0",nodeBorder:"#333",nodeText:"#111",subText:"#666",connLine:"#555",connLabel:"#333",connLabelBg:"#ffffff",zoneFill:"#e8f0fe88",zoneStroke:"#90a4ae",zoneText:"#0066cc",warnBar:"#eee",selectStroke:"#0066cc"}
+};
+function T(){return darkMode?theme.dark:theme.light;}
+function toggleTheme(){darkMode=!darkMode;document.getElementById("themeBtn").textContent=darkMode?"☀ Light":"🌙 Dark";draw();}
+function toggleHelp(){
+var o=document.getElementById("helpOverlay");
+o.classList.toggle("open");
+if(!darkMode){
+var b=o.querySelector(".help-box");
+b.style.background="#f5f5f5";b.style.color="#222";b.style.borderColor="#ccc";
+}else{
+var b=o.querySelector(".help-box");
+b.style.background="#16213e";b.style.color="#ddd";b.style.borderColor="#444";
+}
+}
+function toggleRefOverlay(which){
+var id=which==="meraki"?"merakiRefOverlay":"fortinetRefOverlay";
+var o=document.getElementById(id);
+o.classList.toggle("open");
+var b=o.querySelector(".ref-box");
+if(!darkMode){b.style.background="#f5f5f5";b.style.color="#222";b.style.borderColor="#ccc";}
+else{b.style.background="#16213e";b.style.color="#ddd";b.style.borderColor="#444";}
+}
+function toggleRefSection(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}
+var mode="select",dragNode=null,dragOffX=0,dragOffY=0;
+var connectFrom=null,selectedNode=null,selectedConnIdx=null,selectedZone=null;
+// multi-select sets
+var selectedNodes={},selectedConns={},selectedZones={};
+function clearSelection(){selectedNode=null;selectedConnIdx=null;selectedZone=null;selectedNodes={};selectedConns={};selectedZones={};}
+function hasMultiSel(){return Object.keys(selectedNodes).length+Object.keys(selectedConns).length+Object.keys(selectedZones).length>1;}
+function selNodeCount(){return Object.keys(selectedNodes).length;}
+function selConnCount(){return Object.keys(selectedConns).length;}
+var canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
+var canvasRect;
+// pan & zoom
+var panX=0,panY=0,isPanning=false,panStartX=0,panStartY=0,spaceDown=false;
+var zoom=1,MIN_ZOOM=0.15,MAX_ZOOM=3;
+// undo/redo
+var undoStack=[],redoStack=[],maxUndo=50;
+function saveUndo(){
+var snap=JSON.stringify({nodes:nodes.map(function(n){var c={};for(var k in n)if(k!=="cat")c[k]=n[k];return c;}),connections:connections,zones:zones,nextId:nextId,nextZoneId:nextZoneId});
+undoStack.push(snap);if(undoStack.length>maxUndo)undoStack.shift();
+redoStack=[];
+}
+function undo(){
+if(undoStack.length===0)return;
+var cur=JSON.stringify({nodes:nodes.map(function(n){var c={};for(var k in n)if(k!=="cat")c[k]=n[k];return c;}),connections:connections,zones:zones,nextId:nextId,nextZoneId:nextZoneId});
+redoStack.push(cur);
+var snap=JSON.parse(undoStack.pop());
+restoreSnap(snap);
+}
+function redo(){
+if(redoStack.length===0)return;
+var cur=JSON.stringify({nodes:nodes.map(function(n){var c={};for(var k in n)if(k!=="cat")c[k]=n[k];return c;}),connections:connections,zones:zones,nextId:nextId,nextZoneId:nextZoneId});
+undoStack.push(cur);
+var snap=JSON.parse(redoStack.pop());
+restoreSnap(snap);
+}
+function restoreSnap(snap){
+nodes=snap.nodes||[];connections=snap.connections||[];zones=snap.zones||[];
+nextId=snap.nextId||1;nextZoneId=snap.nextZoneId||1;
+nodes.forEach(function(n){n.cat=getCatItem(n.type,n.catId);});
+clearSelection();hideProps();draw();updateSummary();
+}
+
+// ===== STACK DETECTION =====
+function getStackFamily(catId){
+if(catId.indexOf("MS150")===0)return"MS150";
+if(catId.indexOf("C9300L")===0)return"C9300L";
+if(catId.indexOf("C9300X")===0)return"C9300X";
+if(catId.indexOf("C9300-")===0)return"C9300";
+return catId;
+}
+function getNodeZone(nodeId){
+var n=nodes.find(function(nn){return nn.id===nodeId;});
+if(!n)return null;
+var cx=n.x+n.w/2,cy=n.y+n.h/2;
+for(var i=0;i<zones.length;i++){
+var z=zones[i];
+if(cx>=z.x&&cx<=z.x+z.w&&cy>=z.y&&cy<=z.y+z.h)return z.id;
+}
+return null;
+}
+function getStacks(){
+var visited={},stacks=[];
+var switchNodes=nodes.filter(function(n){return n.type==="switch"&&n.cat.stack&&!n.noStack;});
+switchNodes.forEach(function(n){
+if(visited[n.id])return;
+var family=getStackFamily(n.catId);
+var zone=getNodeZone(n.id);
+var group=[n];visited[n.id]=true;
+var queue=[n];
+while(queue.length>0){
+var cur=queue.shift();
+connections.forEach(function(c){
+var otherId=c.from===cur.id?c.to:c.from;
+if(visited[otherId])return;
+var other=nodes.find(function(nn){return nn.id===otherId;});
+if(other&&other.type==="switch"&&other.cat.stack&&!other.noStack&&getStackFamily(other.catId)===family&&getNodeZone(other.id)===zone){
+visited[other.id]=true;group.push(other);queue.push(other);
+}
+});
+}
+if(group.length>1)stacks.push(group);
+});
+return stacks;
+}
+function getStackForNode(nodeId,stacks){
+for(var i=0;i<stacks.length;i++){
+if(stacks[i].some(function(n){return n.id===nodeId;}))return stacks[i];
+}return null;
+}
+function getStackTotals(stack){
+var access=0,uplinks=0,poe=0,power=0,mgig=0,isAgg=stack.some(function(n){return n.isAgg;});
+stack.forEach(function(n){access+=n.cat.access;uplinks+=getNodeUplinks(n);poe+=n.cat.poe;power+=n.cat.power;mgig+=(n.cat.mgigPorts||0);});
+if(isAgg)return{access:0,uplinks:access+uplinks,poe:poe,power:power,members:stack.length,isAgg:true,mgig:mgig};
+return{access:access,uplinks:uplinks,poe:poe,power:power,members:stack.length,isAgg:false,mgig:mgig};
+}
+function getStackBounds(stack){
+var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+stack.forEach(function(n){
+minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);
+maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h);
+});
+return{x:minX-8,y:minY-18,w:maxX-minX+16,h:maxY-minY+26};
+}
+function getStackExternalConnections(stack){
+var memberIds={};
+stack.forEach(function(n){memberIds[n.id]=true;});
+var ext=[];
+connections.forEach(function(c){
+var fromIn=memberIds[c.from],toIn=memberIds[c.to];
+if(fromIn&&!toIn){var other=nodes.find(function(n){return n.id===c.to;});if(other)ext.push(other);}
+if(!fromIn&&toIn){var other=nodes.find(function(n){return n.id===c.from;});if(other)ext.push(other);}
+});
+return ext;
+}
+
+// ===== PALETTE =====
+function buildPalette(){
+var fw=document.getElementById("palFirewalls");
+catalog.firewalls.forEach(function(d){fw.innerHTML+="<div class='palette-item' draggable='true' ondragstart='dragStart(event,\"firewall\",\""+d.id+"\")'>"+d.label+"<span class='info'>"+d.tier+"</span></div>";});
+var sw=document.getElementById("palSwitches");
+catalog.switches.forEach(function(d){sw.innerHTML+="<div class='palette-item' draggable='true' ondragstart='dragStart(event,\"switch\",\""+d.id+"\")'>"+d.label+"<span class='info'>"+d.access+"p "+(d.poe||0)+"W</span></div>";});
+var ap=document.getElementById("palAPs");
+catalog.aps.forEach(function(d){ap.innerHTML+="<div class='palette-item' draggable='true' ondragstart='dragStart(event,\"ap\",\""+d.id+"\")'>"+d.label+" <span style='color:"+(d.place==="Outdoor"?"#e9a045":"#888")+";font-size:10px;'>("+d.place+")</span><span class='info'>"+d.power+"W "+d.poe+"</span></div>";});
+var cam=document.getElementById("palCameras");
+catalog.cameras.forEach(function(d){cam.innerHTML+="<div class='palette-item' draggable='true' ondragstart='dragStart(event,\"camera\",\""+d.id+"\")'>"+d.label+" <span style='color:"+(d.place==="Outdoor"?"#e9a045":d.place==="Indoor/Outdoor"?"#b39ddb":"#888")+";font-size:10px;'>("+d.place+")</span><span class='info'>"+d.power+"W "+d.poe+"</span></div>";});
+var sen=document.getElementById("palSensors");
+catalog.sensors.forEach(function(d){sen.innerHTML+="<div class='palette-item' draggable='true' ondragstart='dragStart(event,\"sensor\",\""+d.id+"\")'>"+d.label+"<span class='info'>"+d.desc+"</span></div>";});
+}
+
+function togglePal(el){el.classList.toggle("open");el.nextElementSibling.classList.toggle("open");}
+
+// ===== DRAG & DROP =====
+var dragType="",dragCatId="",dragPreviewX=-1,dragPreviewY=-1;
+function dragStart(e,type,catId){dragType=type;dragCatId=catId;e.dataTransfer.setData("text","");}
+canvas.addEventListener("dragover",function(e){
+e.preventDefault();
+var rect=canvas.getBoundingClientRect();
+dragPreviewX=e.clientX-rect.left;dragPreviewY=e.clientY-rect.top;
+draw();
+});
+canvas.addEventListener("dragleave",function(){dragPreviewX=-1;dragPreviewY=-1;draw();});
+canvas.addEventListener("drop",function(e){
+e.preventDefault();
+var rect=canvas.getBoundingClientRect();
+var x=(e.clientX-rect.left-panX)/zoom,y=(e.clientY-rect.top-panY)/zoom;
+dragPreviewX=-1;dragPreviewY=-1;
+if(dragType==="zone"){addZone(dragCatId,x,y);}
+else{addNode(dragType,dragCatId,x,y);}
+});
+
+// ===== NODES =====
+var nimRef={"C9300-NM-8X":{desc:"8x 10G/1G SFP+",ports:8},"C9300-NM-2Q":{desc:"2x 40G QSFP",ports:2},"C9300-NM-2Y":{desc:"2x 25G SFP28",ports:2},"C9300X-NM-8Y":{desc:"8x 1/10/25G SFP28",ports:8},"C9300X-NM-2C":{desc:"2x 40G/100G QSFP28",ports:2},"C9300X-NM-4C":{desc:"4x 40G/100G QSFP28",ports:4}};
+var antRef={
+"MA-ANT-3-A6":{desc:"Omni dipole (low ceiling)",gain:"3.8/5.5 dBi"},
+"MA-ANT-3-D6":{desc:"Down-tilt omni (med ceiling)",gain:"3/5 dBi"},
+"MA-ANT-3-E6":{desc:"Wide patch (open office)",gain:"4/6 dBi"},
+"MA-ANT-3-F6":{desc:"Narrow patch (high ceiling)",gain:"5/7 dBi"},
+"MA-ANT-20":{desc:"Omni (general outdoor)",gain:"4/7 dBi"},
+"MA-ANT-25":{desc:"Wide patch (directional)",gain:"8/6.5 dBi"},
+"MA-ANT-27":{desc:"Narrow sector (long range)",gain:"9/11 dBi"}
+};
+function getCatItem(type,catId){
+var list=type==="firewall"?catalog.firewalls:type==="switch"?catalog.switches:type==="ap"?catalog.aps:type==="sensor"?catalog.sensors:type==="camera"?catalog.cameras:null;
+if(type==="generic")return{id:"Generic",label:"Generic",power:0};
+if(type==="poedevice")return{id:"PoEDevice",label:"PoE Device",power:15};
+return list?list.find(function(d){return d.id===catId;}):null;
+}
+function addNode(type,catId,x,y){
+var cat=getCatItem(type,catId);if(!cat)return;
+saveUndo();
+var w=type==="firewall"?120:type==="switch"?130:(type==="generic"||type==="poedevice")?120:70;
+var h=type==="firewall"?50:type==="switch"?52:(type==="generic"||type==="poedevice")?44:44;
+var node={id:nextId++,type:type,catId:catId,label:cat.label,x:x-w/2,y:y-h/2,w:w,h:h,cat:cat,name:(type==="generic"||type==="poedevice")?"":cat.label,nim:"",nimPorts:0,isAgg:false,noStack:false,qty:1,customPower:type==="poedevice"?15:0};
+nodes.push(node);
+draw();updateSummary();
+}
+
+// ===== ZONES =====
+function addZone(type,x,y){
+saveUndo();
+var zoneNum=zones.filter(function(z){return z.zoneType===type;}).length+1;
+var name=type==="IDF"?type+" "+zoneNum:type;
+zones.push({id:nextZoneId++,zoneType:type,name:name,x:x-140,y:y-100,w:280,h:200});
+draw();
+}
+var dragZone=null,dragZoneOffX=0,dragZoneOffY=0,resizeZone=null;
+
+// ===== CANVAS SIZING =====
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;canvas.height=canvas.parentElement.clientHeight;canvasRect=canvas.getBoundingClientRect();draw();}
+window.addEventListener("resize",resizeCanvas);
+
+function fitToView(){
+var allItems=nodes.concat(zones.map(function(z){return{x:z.x,y:z.y,w:z.w,h:z.h};}));
+if(allItems.length===0){panX=0;panY=0;zoom=1;draw();return;}
+var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+allItems.forEach(function(n){
+minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);
+maxX=Math.max(maxX,n.x+(n.w||130));maxY=Math.max(maxY,n.y+(n.h||50));
+});
+var contentW=maxX-minX,contentH=maxY-minY;
+var pad=80;
+var scaleX=(canvas.width-pad*2)/contentW;
+var scaleY=(canvas.height-pad*2)/contentH;
+zoom=Math.min(scaleX,scaleY,MAX_ZOOM);
+zoom=Math.max(zoom,MIN_ZOOM);
+var cx=minX+contentW/2,cy=minY+contentH/2;
+panX=canvas.width/2-cx*zoom;
+panY=canvas.height/2-cy*zoom;
+draw();
+}
+
+// ===== DRAWING =====
+function draw(){
+var t=T();
+canvas.style.background=t.bg;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.save();
+ctx.translate(panX,panY);
+ctx.scale(zoom,zoom);
+// grid
+ctx.strokeStyle=t.grid;ctx.lineWidth=1/zoom;
+var gridSize=40;
+var startX=Math.floor(-panX/zoom/gridSize)*gridSize-gridSize;
+var startY=Math.floor(-panY/zoom/gridSize)*gridSize-gridSize;
+var endX=startX+canvas.width/zoom+gridSize*3;
+var endY=startY+canvas.height/zoom+gridSize*3;
+for(var gx=startX;gx<endX;gx+=gridSize){ctx.beginPath();ctx.moveTo(gx,startY);ctx.lineTo(gx,endY);ctx.stroke();}
+for(var gy=startY;gy<endY;gy+=gridSize){ctx.beginPath();ctx.moveTo(startX,gy);ctx.lineTo(endX,gy);ctx.stroke();}
+// connections
+// zones first (behind everything)
+zones.forEach(function(z){
+ctx.fillStyle=t.zoneFill;
+ctx.strokeStyle=selectedZone&&selectedZone.id===z.id?t.selectStroke:t.zoneStroke;ctx.lineWidth=selectedZone&&selectedZone.id===z.id?2:1;
+ctx.beginPath();ctx.roundRect(z.x,z.y,z.w,z.h,8);ctx.fill();ctx.stroke();
+ctx.fillStyle=t.zoneText;ctx.font="bold 12px Arial";ctx.textAlign="left";ctx.textBaseline="top";
+ctx.fillText(z.name,z.x+8,z.y+6);
+// resize handle
+ctx.fillStyle=t.zoneStroke;
+ctx.fillRect(z.x+z.w-12,z.y+z.h-12,10,10);
+});
+// connections
+// connection media colors
+var mediaColors={"Ethernet":"#5b9bd5","SMF":"#f0c040","MMF":"#e94560","GameChanger":"#4ecca3"};
+connections.forEach(function(c,idx){
+var a=nodes.find(function(n){return n.id===c.from;}),b=nodes.find(function(n){return n.id===c.to;});
+if(!a||!b)return;
+var isSel=selectedConnIdx===idx||selectedConns[idx];
+var mColor=mediaColors[c.media]||mediaColors["Ethernet"];
+var po=parallelOffset(c,idx);
+if(c.custProvided){ctx.setLineDash([8,6]);}else{ctx.setLineDash([]);}
+ctx.beginPath();
+ctx.moveTo(a.x+a.w/2+po.x,a.y+a.h/2+po.y);
+ctx.lineTo(b.x+b.w/2+po.x,b.y+b.h/2+po.y);
+ctx.strokeStyle=isSel?t.selectStroke:mColor;ctx.lineWidth=isSel?3:2;ctx.stroke();
+ctx.setLineDash([]);
+// hide label for stack connections (switch-to-switch in same stack)
+var isStackConn=false;
+if(a.type==="switch"&&b.type==="switch"){var stks=getStacks();for(var si=0;si<stks.length;si++){var mids={};stks[si].forEach(function(sn){mids[sn.id]=true;});if(mids[a.id]&&mids[b.id]){isStackConn=true;break;}}}
+var hasLabel=!isStackConn&&(c.label||c.media);
+if(hasLabel){
+var acx=a.x+a.w/2,acy=a.y+a.h/2,bcx=b.x+b.w/2,bcy=b.y+b.h/2;
+var mx=acx+(bcx-acx)*po.t+po.x,my=acy+(bcy-acy)*po.t+po.y;
+var txt=c.label?((c.media||"")+" "+c.label).trim():(c.media||"");
+if(c.custProvided)txt="[CP] "+txt;
+var tw=ctx.measureText(txt).width+12;
+ctx.fillStyle=t.connLabelBg;ctx.fillRect(mx-tw/2,my-8,tw,16);
+ctx.fillStyle=t.connLabel;ctx.font="9px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ctx.fillText(txt,mx,my);
+}
+});
+// nodes
+nodes.forEach(function(n){
+var colors={firewall:"#00d4ff",switch:"#5b9bd5","ap":"#4ecca3",camera:"#e9a045",sensor:"#c084fc",generic:"#999",poedevice:"#e06c75"};
+var bgColors=darkMode?{firewall:"#0a2a3d",switch:"#0a1e3d","ap":"#0d2e2e",camera:"#3d2a10",sensor:"#1e0a3d",generic:"#2a2a2a",poedevice:"#3d1a1a"}:{firewall:"#d6f0ff",switch:"#dce8f5","ap":"#d6f5ec",camera:"#fef0d6",sensor:"#f0e0ff",generic:"#e8e8e8",poedevice:"#fde0e0"};
+ctx.fillStyle=bgColors[n.type]||"#222";
+ctx.strokeStyle=(selectedNode&&selectedNode.id===n.id)||selectedNodes[n.id]?t.selectStroke:colors[n.type]||"#444";
+ctx.lineWidth=(selectedNode&&selectedNode.id===n.id)||selectedNodes[n.id]?2:1;
+ctx.beginPath();ctx.roundRect(n.x,n.y,n.w,n.h,6);ctx.fill();ctx.stroke();
+ctx.fillStyle=colors[n.type]||"#eee";
+ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+var nameLabel=(n.qty>1?n.name+" x"+n.qty:n.name||n.label);
+ctx.fillText(nameLabel,n.x+n.w/2,n.y+n.h/2-6);
+ctx.fillStyle=t.subText;ctx.font="10px Arial";
+var sub=n.type==="firewall"?n.cat.tier:n.type==="switch"?(n.cat.access+"p "+n.cat.poe+"W"+(n.nim?" +"+n.nim:"")+(n.isAgg?" [AGG]":"")):n.type==="sensor"?(n.cat.desc||""):n.type==="generic"?"":n.type==="poedevice"?(n.customPower+"W ea"):"("+n.cat.power+"W)";
+ctx.fillText(sub,n.x+n.w/2,n.y+n.h/2+8);
+// port usage indicator for switches
+if(n.type==="switch"){
+var stks=getStacks();
+var stk=getStackForNode(n.id,stks);
+var used,total;
+if(stk){
+var totals=getStackTotals(stk);
+var ext=getStackExternalConnections(stk);
+var accessUsed=0,uplinkUsed=0;
+ext.forEach(function(cn){
+if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;
+else accessUsed+=(cn.qty||1);
+});
+used=accessUsed+uplinkUsed;
+total=totals.access+totals.uplinks;
+}else{
+used=getPortsUsed(n);
+total=n.cat.access+getNodeUplinks(n);
+}
+var pct=total>0?used/total:0;
+var barW=n.w-10,barH=3,barX=n.x+5,barY=n.y+n.h-10;
+ctx.fillStyle=t.warnBar;ctx.fillRect(barX,barY,barW,barH);
+ctx.fillStyle=pct>0.8?"#e94560":"#4ecca3";ctx.fillRect(barX,barY,barW*Math.min(pct,1),barH);
+// PoE power bar
+var poeBudget,poeUsed=0;
+if(stk){
+var stkTotals=getStackTotals(stk);
+poeBudget=stkTotals.poe;
+var stkExt=getStackExternalConnections(stk);
+stkExt.forEach(function(cn){if(cn.type==="ap"||cn.type==="camera")poeUsed+=cn.cat.power*(cn.qty||1);else if(cn.type==="poedevice")poeUsed+=(cn.customPower||15)*(cn.qty||1);});
+}else{
+poeBudget=n.cat.poe;
+var conn=getConnectedNodes(n.id);
+conn.forEach(function(cn){if(cn.type==="ap"||cn.type==="camera")poeUsed+=cn.cat.power*(cn.qty||1);else if(cn.type==="poedevice")poeUsed+=(cn.customPower||15)*(cn.qty||1);});
+}
+if(poeBudget>0){
+var poePct=poeUsed/poeBudget;
+var barY2=barY+4;
+ctx.fillStyle=t.warnBar;ctx.fillRect(barX,barY2,barW,barH);
+ctx.fillStyle=poePct>0.8?"#e94560":"#e9a045";ctx.fillRect(barX,barY2,barW*Math.min(poePct,1),barH);
+}
+}
+});
+// connect mode preview
+if(mode==="connect"&&connectFrom){
+ctx.setLineDash([5,5]);ctx.beginPath();
+ctx.moveTo(connectFrom.x+connectFrom.w/2,connectFrom.y+connectFrom.h/2);
+ctx.lineTo(mouseX,mouseY);ctx.strokeStyle="#4ecca388";ctx.lineWidth=2;ctx.stroke();
+ctx.setLineDash([]);
+}
+// stack groups
+var stacks=getStacks();
+stacks.forEach(function(stack){
+var b=getStackBounds(stack);
+var totals=getStackTotals(stack);
+var ext=getStackExternalConnections(stack);
+var accessUsed=0,uplinkUsed=0,poeLoad=0;
+ext.forEach(function(cn){
+if(totals.isAgg){uplinkUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera")poeLoad+=cn.cat.power*(cn.qty||1);else if(cn.type==="poedevice")poeLoad+=(cn.customPower||15)*(cn.qty||1);}
+else if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;
+else{accessUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera")poeLoad+=cn.cat.power*(cn.qty||1);else if(cn.type==="poedevice")poeLoad+=(cn.customPower||15)*(cn.qty||1);}
+});
+ctx.setLineDash([6,4]);
+ctx.strokeStyle="#00d4ff";ctx.lineWidth=1.5;
+ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,8);ctx.stroke();
+ctx.setLineDash([]);
+ctx.fillStyle="#00d4ff";ctx.font="bold 10px Arial";ctx.textAlign="left";ctx.textBaseline="top";
+ctx.fillText("Stack ("+stack.length+"x) — "+totals.access+"p / "+totals.poe+"W / "+totals.uplinks+" UL",b.x+4,b.y+3);
+// warning indicators
+if(accessUsed>totals.access||uplinkUsed>totals.uplinks||poeLoad>totals.poe*0.8){
+ctx.fillStyle="#e94560";ctx.font="bold 10px Arial";ctx.textAlign="right";
+ctx.fillText("⚠",b.x+b.w-4,b.y+3);
+}
+});
+// drag preview ghost
+ctx.restore();
+if(dragPreviewX>=0&&dragPreviewY>=0&&dragType){
+ctx.globalAlpha=0.4;
+if(dragType==="zone"){
+var pw=280,ph=200;
+ctx.fillStyle="#0d1b3e";ctx.strokeStyle="#334155";ctx.lineWidth=1;
+ctx.beginPath();ctx.roundRect(dragPreviewX-pw/2,dragPreviewY-ph/2,pw,ph,8);ctx.fill();ctx.stroke();
+ctx.fillStyle="#00d4ff";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ctx.fillText(dragCatId,dragPreviewX,dragPreviewY);
+}else{
+var pw=dragType==="firewall"?120:dragType==="switch"?130:(dragType==="generic"||dragType==="poedevice")?120:70;
+var ph=dragType==="firewall"?50:44;
+var colors={firewall:"#0a2a3d",switch:"#0a1e3d",ap:"#0d2e2e",camera:"#3d2a10",sensor:"#1e0a3d",generic:"#2a2a2a",poedevice:"#3d1a1a"};
+ctx.fillStyle=colors[dragType]||"#222";
+ctx.strokeStyle="#fff";ctx.lineWidth=1;
+ctx.beginPath();ctx.roundRect(dragPreviewX-pw/2,dragPreviewY-ph/2,pw,ph,6);ctx.fill();ctx.stroke();
+ctx.fillStyle="#eee";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ctx.fillText(dragCatId,dragPreviewX,dragPreviewY);
+}
+ctx.globalAlpha=1.0;
+}
+var zl=document.getElementById('zoomLbl');if(zl)zl.textContent=Math.round(zoom*100)+'%';
+}
+
+var mouseX=0,mouseY=0;
+
+// ===== MOUSE EVENTS =====
+canvas.addEventListener("mousedown",function(e){
+var rect=canvas.getBoundingClientRect();
+var mx=(e.clientX-rect.left-panX)/zoom,my=(e.clientY-rect.top-panY)/zoom;
+// space+click = pan
+if(spaceDown){isPanning=true;panStartX=e.clientX-panX;panStartY=e.clientY-panY;return;}
+var hit=hitTest(mx,my);
+if(mode==="select"){
+// check zone resize handle first
+var rz=hitTestZoneResize(mx,my);
+if(rz){resizeZone=rz;dragZoneOffX=mouseX;dragZoneOffY=mouseY;draw();return;}
+// check node hit
+if(hit){
+if(e.ctrlKey){
+// Ctrl+drag = clone
+saveUndo();
+var cloneName=hit.name;
+if(hit.type==="poedevice"||hit.type==="generic"){var m=cloneName.match(/^(.*?)(\d+)$/);if(m)cloneName=m[1]+(parseInt(m[2])+1);else if(cloneName)cloneName=cloneName+" 2";}
+var clone={id:nextId++,type:hit.type,catId:hit.catId,label:hit.label,x:hit.x+20,y:hit.y+20,w:hit.w,h:hit.h,cat:hit.cat,name:cloneName,nim:hit.nim||"",nimPorts:hit.nimPorts||0,isAgg:hit.isAgg||false,noStack:hit.noStack||false,qty:hit.qty||1,antenna:hit.antenna||"",customPower:hit.customPower||0};
+nodes.push(clone);
+clearSelection();
+dragNode=clone;dragOffX=mx-clone.x;dragOffY=my-clone.y;selectedNode=clone;selectedNodes[clone.id]=true;showProps(clone);
+updateSummary();
+}else if(e.shiftKey){
+// Shift+click = toggle in multi-select
+if(selectedNodes[hit.id]){delete selectedNodes[hit.id];}
+else{selectedNodes[hit.id]=true;}
+selectedNode=hit;selectedConnIdx=null;selectedZone=null;selectedConns={};selectedZones={};
+if(selNodeCount()>1)showMultiNodeProps();else showProps(hit);
+}else{
+// if clicking a node already in multi-select, start multi-drag
+if(selectedNodes[hit.id]&&selNodeCount()>1){
+saveUndo();
+dragNode=hit;dragOffX=mx;dragOffY=my;
+}else{
+clearSelection();
+dragNode=hit;dragOffX=mx-hit.x;dragOffY=my-hit.y;selectedNode=hit;selectedNodes[hit.id]=true;showProps(hit);
+}
+}
+}else{
+// check connection hit
+var ci=hitTestConnection(mx,my);
+if(ci!==null){
+if(e.shiftKey){
+if(selectedConns[ci]){delete selectedConns[ci];}
+else{selectedConns[ci]=true;}
+selectedNode=null;selectedConnIdx=ci;selectedZone=null;selectedNodes={};selectedZones={};
+if(selConnCount()>1)showMultiConnProps();else showConnProps(ci);
+}else{
+clearSelection();
+selectedConnIdx=ci;selectedConns[ci]=true;showConnProps(ci);
+}
+draw();return;
+}
+// check zone body drag
+var zh=hitTestZone(mx,my);
+if(zh){
+if(e.ctrlKey){
+saveUndo();
+var zClone={id:nextZoneId++,zoneType:zh.zoneType,name:zh.name+" copy",x:zh.x+30,y:zh.y+30,w:zh.w,h:zh.h};
+zones.push(zClone);
+clearSelection();
+dragZone=zClone;dragZoneOffX=mx-zClone.x;dragZoneOffY=my-zClone.y;selectedZone=zClone;showZoneProps(zClone);
+}else{
+clearSelection();
+dragZone=zh;dragZoneOffX=mx-zh.x;dragZoneOffY=my-zh.y;selectedZone=zh;showZoneProps(zh);
+}
+}
+else{clearSelection();hideProps();isPanning=true;panStartX=e.clientX-panX;panStartY=e.clientY-panY;}
+}
+draw();
+}else if(mode==="connect"){
+if(hit){
+if(!connectFrom){connectFrom=hit;}
+else if(hit.id!==connectFrom.id){
+saveUndo();
+connections.push({from:connectFrom.id,to:hit.id,label:"",media:"Ethernet"});
+updateSummary();
+document.getElementById("statusInfo").textContent="Connected";
+connectFrom=null;
+}
+draw();
+}
+}
+});
+canvas.addEventListener("mousemove",function(e){
+var rect=canvas.getBoundingClientRect();
+mouseX=(e.clientX-rect.left-panX)/zoom;mouseY=(e.clientY-rect.top-panY)/zoom;
+if(isPanning){panX=e.clientX-panStartX;panY=e.clientY-panStartY;draw();return;}
+if(dragNode&&mode==="select"){
+if(selNodeCount()>1){
+var dx=mouseX-dragOffX,dy=mouseY-dragOffY;
+nodes.forEach(function(n){if(selectedNodes[n.id]){n.x+=dx;n.y+=dy;}});
+dragOffX=mouseX;dragOffY=mouseY;
+}else{
+dragNode.x=mouseX-dragOffX;dragNode.y=mouseY-dragOffY;
+}
+draw();
+}
+if(dragZone&&mode==="select"){
+dragZone.x=mouseX-dragZoneOffX;dragZone.y=mouseY-dragZoneOffY;
+draw();
+}
+if(resizeZone&&mode==="select"){
+var dx=mouseX-dragZoneOffX,dy=mouseY-dragZoneOffY;
+resizeZone.w=Math.max(160,resizeZone.w+dx);resizeZone.h=Math.max(100,resizeZone.h+dy);
+dragZoneOffX=mouseX;dragZoneOffY=mouseY;
+draw();
+}
+if(mode==="connect"&&connectFrom)draw();
+});
+canvas.addEventListener("mouseup",function(){
+dragNode=null;dragZone=null;resizeZone=null;isPanning=false;
+});
+canvas.addEventListener("wheel",function(e){
+e.preventDefault();
+var rect=canvas.getBoundingClientRect();
+var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+// world coords before zoom
+var wx=(mx-panX)/zoom,wy=(my-panY)/zoom;
+var delta=e.deltaY>0?0.9:1.1;
+zoom=Math.min(MAX_ZOOM,Math.max(MIN_ZOOM,zoom*delta));
+// adjust pan so point under cursor stays fixed
+panX=mx-wx*zoom;panY=my-wy*zoom;
+draw();
+},{passive:false});
+
+function hitTest(mx,my){
+for(var i=nodes.length-1;i>=0;i--){
+var n=nodes[i];
+if(mx>=n.x&&mx<=n.x+n.w&&my>=n.y&&my<=n.y+n.h)return n;
+}return null;
+}
+function hitTestConnection(mx,my){
+for(var i=0;i<connections.length;i++){
+var c=connections[i];
+var a=nodes.find(function(n){return n.id===c.from;}),b=nodes.find(function(n){return n.id===c.to;});
+if(!a||!b)continue;
+var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2;
+var d=distToSegment(mx,my,ax,ay,bx,by);
+if(d<8)return i;
+}return null;
+}
+function distToSegment(px,py,ax,ay,bx,by){
+var dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+var nx=ax+t*dx,ny=ay+t*dy;
+return Math.sqrt((px-nx)*(px-nx)+(py-ny)*(py-ny));
+}
+function connectionExists(a,b){return connections.some(function(c){return(c.from===a&&c.to===b)||(c.from===b&&c.to===a);});}
+function parallelOffset(c,idx){
+// returns {x,y} perpendicular offset so multiple connections between the same pair render as parallel lines
+// also returns {t} = position fraction along the line for the label (spreads labels so they don't overlap)
+var a=nodes.find(function(n){return n.id===c.from;}),b=nodes.find(function(n){return n.id===c.to;});
+if(!a||!b)return{x:0,y:0,t:0.5};
+var pairConns=[];
+connections.forEach(function(cc,ci){if((cc.from===c.from&&cc.to===c.to)||(cc.from===c.to&&cc.to===c.from))pairConns.push(ci);});
+if(pairConns.length<2)return{x:0,y:0,t:0.5};
+var pairIdx=pairConns.indexOf(idx);
+var dx=(b.x+b.w/2)-(a.x+a.w/2),dy=(b.y+b.h/2)-(a.y+a.h/2);
+var len=Math.sqrt(dx*dx+dy*dy)||1;
+var nx=-dy/len,ny=dx/len;
+var spacing=6,offset=(pairIdx-(pairConns.length-1)/2)*spacing;
+// spread labels between 35% and 65% of the line based on index
+var t=pairConns.length>1?0.35+(pairIdx/(pairConns.length-1))*0.30:0.5;
+return{x:nx*offset,y:ny*offset,t:t};
+}
+
+function hitTestZone(mx,my){
+for(var i=zones.length-1;i>=0;i--){
+var z=zones[i];
+if(mx>=z.x&&mx<=z.x+z.w&&my>=z.y&&my<=z.y+24)return z;
+}return null;
+}
+function hitTestZoneResize(mx,my){
+for(var i=zones.length-1;i>=0;i--){
+var z=zones[i];
+if(mx>=z.x+z.w-14&&mx<=z.x+z.w&&my>=z.y+z.h-14&&my<=z.y+z.h)return z;
+}return null;
+}
+function showZoneProps(zone){
+var panel=document.getElementById("propsPanel");
+var title=document.getElementById("propsTitle");
+var content=document.getElementById("propsContent");
+panel.style.display="block";
+title.textContent=zone.name;
+var h="<label>Name</label><input type='text' value='"+(zone.name||"")+"' oninput='updateZoneName("+zone.id+",this.value)'>";
+// count devices inside this zone
+var inside=getNodesInZone(zone);
+if(inside.length>0){
+var totalPoe=0,totalPower=0;
+inside.forEach(function(n){
+var q=n.qty||1;
+if(n.type==="switch")totalPower+=n.cat.power;
+else if(n.type==="ap"||n.type==="camera")totalPoe+=n.cat.power*q;
+else if(n.type==="firewall")totalPower+=n.cat.power;
+});
+h+="<div class='port-summary'><b>Devices:</b> "+inside.length+"<br>";
+h+="<b>Switch Power:</b> "+Math.round(totalPower)+"W<br>";
+h+="<b>PoE Load:</b> "+Math.round(totalPoe)+"W<br>";
+h+="<b>Total:</b> "+Math.round(totalPower+totalPoe)+"W</div>";
+}
+h+="<br><button onclick='deleteZone("+zone.id+")' style='padding:4px 10px;font-size:11px;background:#e94560;color:#eee;border:none;border-radius:4px;cursor:pointer;'>Delete Zone</button>";
+content.innerHTML=h;
+}
+function updateZoneName(id,val){var z=zones.find(function(z){return z.id===id;});if(z){z.name=val;draw();}}
+function showConnProps(idx){
+var c=connections[idx];if(!c)return;
+var a=nodes.find(function(n){return n.id===c.from;}),b=nodes.find(function(n){return n.id===c.to;});
+if(!a||!b)return;
+var panel=document.getElementById("propsPanel");
+var title=document.getElementById("propsTitle");
+var content=document.getElementById("propsContent");
+panel.style.display="block";
+title.textContent="Connection";
+var h="<div style='margin-bottom:6px;color:#aaa;'>"+a.name+" ↔ "+b.name+"</div>";
+h+="<label>Media Type</label><select onchange='updateConnMedia("+idx+",this.value)'>";
+["Ethernet","SMF","MMF","GameChanger"].forEach(function(m){h+="<option value='"+m+"'"+(c.media===m?" selected":"")+">"+m+"</option>";});
+h+="</select>";
+h+="<label style='display:flex;align-items:center;gap:6px;margin:6px 0;'><input type='checkbox' "+(c.custProvided?"checked":"")+" onchange='updateConnCP("+idx+",this.checked)'> Customer Provided</label>";
+h+="<label>Label</label><input type='text' value='"+(c.label||"")+"' oninput='updateConnLabel("+idx+",this.value)' placeholder='e.g. Cat6, OS2...'>";
+content.innerHTML=h;
+}
+function updateConnMedia(idx,val){if(connections[idx]){connections[idx].media=val;draw();}}
+function updateConnCP(idx,val){if(connections[idx]){connections[idx].custProvided=val;draw();}}
+function updateConnLabel(idx,val){if(connections[idx]){connections[idx].label=val;draw();}}
+function showMultiNodeProps(){
+var ids=Object.keys(selectedNodes);
+var panel=document.getElementById("propsPanel");
+panel.style.display="block";
+document.getElementById("propsTitle").textContent=ids.length+" Devices Selected";
+document.getElementById("propsContent").innerHTML="<div style='color:#aaa;font-size:11px;'>Drag to move all selected devices.<br>Press Delete to remove all.</div>";
+}
+function showMultiConnProps(){
+var idxs=Object.keys(selectedConns);
+var panel=document.getElementById("propsPanel");
+panel.style.display="block";
+document.getElementById("propsTitle").textContent=idxs.length+" Connections Selected";
+var h="<label>Media Type</label><select onchange='updateMultiConnMedia(this.value)'><option value=''>-- Keep --</option>";
+["Ethernet","SMF","MMF","GameChanger"].forEach(function(m){h+="<option value='"+m+"'>"+m+"</option>";});
+h+="</select>";
+h+="<label style='display:flex;align-items:center;gap:6px;margin:6px 0;'><input type='checkbox' onchange='updateMultiConnCP(this.checked)'> Customer Provided</label>";
+document.getElementById("propsContent").innerHTML=h;
+}
+function updateMultiConnMedia(val){
+if(!val)return;
+Object.keys(selectedConns).forEach(function(i){if(connections[i])connections[i].media=val;});
+draw();
+}
+function updateMultiConnCP(val){
+Object.keys(selectedConns).forEach(function(i){if(connections[i])connections[i].custProvided=val;});
+draw();
+}
+function deleteZone(id){zones=zones.filter(function(z){return z.id!==id;});hideProps();draw();}
+function getNodesInZone(zone){
+return nodes.filter(function(n){
+var cx=n.x+n.w/2,cy=n.y+n.h/2;
+return cx>=zone.x&&cx<=zone.x+zone.w&&cy>=zone.y&&cy<=zone.y+zone.h;
+});
+}
+
+// ===== MODE =====
+document.addEventListener("keydown",function(e){
+if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.target.tagName==="TEXTAREA")return;
+if(e.code==="Space"&&!e.repeat){spaceDown=true;canvas.style.cursor="grab";e.preventDefault();}
+if(e.ctrlKey&&e.code==="KeyZ"){e.preventDefault();undo();}
+if(e.ctrlKey&&e.code==="KeyY"){e.preventDefault();redo();}
+if(e.code==="Delete"||e.code==="Backspace"){
+e.preventDefault();
+var multiNodes=Object.keys(selectedNodes);
+var multiConns=Object.keys(selectedConns);
+if(multiNodes.length>0||multiConns.length>0){
+saveUndo();
+if(multiNodes.length>0){
+var delIds={};multiNodes.forEach(function(id){delIds[parseInt(id)]=true;});
+connections=connections.filter(function(c){return !delIds[c.from]&&!delIds[c.to];});
+nodes=nodes.filter(function(n){return !delIds[n.id];});
+}
+if(multiConns.length>0){
+var idxs=multiConns.map(Number).sort(function(a,b){return b-a;});
+idxs.forEach(function(i){if(i<connections.length)connections.splice(i,1);});
+}
+clearSelection();hideProps();draw();updateSummary();
+}else if(selectedZone){
+saveUndo();
+zones=zones.filter(function(z){return z.id!==selectedZone.id;});
+clearSelection();hideProps();draw();
+}
+}
+});
+document.addEventListener("keyup",function(e){
+if(e.code==="Space"){spaceDown=false;isPanning=false;canvas.style.cursor="default";}
+});
+function setMode(m){
+mode=m;connectFrom=null;
+document.getElementById("btnSelect").classList.toggle("active",m==="select");
+document.getElementById("btnConnect").classList.toggle("active",m==="connect");
+document.getElementById("statusMode").textContent="Mode: "+m.charAt(0).toUpperCase()+m.slice(1);
+draw();
+}
+
+// ===== PORT TRACKING =====
+function getPortsUsed(node){
+var count=0;
+connections.forEach(function(c){
+if(c.from===node.id||c.to===node.id){
+var otherId=c.from===node.id?c.to:c.from;
+var other=nodes.find(function(n){return n.id===otherId;});
+count+=(other&&(other.type==="ap"||other.type==="camera"))?(other.qty||1):1;
+}
+});
+return count;
+}
+function getConnectionsByNode(nodeId){
+return connections.filter(function(c){return c.from===nodeId||c.to===nodeId;});
+}
+function getConnectedNodes(nodeId){
+return getConnectionsByNode(nodeId).map(function(c){
+var otherId=c.from===nodeId?c.to:c.from;
+return nodes.find(function(n){return n.id===otherId;});
+}).filter(Boolean);
+}
+
+// ===== PROPERTIES PANEL =====
+function showProps(node){
+var panel=document.getElementById("propsPanel");
+var title=document.getElementById("propsTitle");
+var content=document.getElementById("propsContent");
+panel.style.display="block";
+title.textContent=node.label;
+var h="<label>Name</label><input type='text' value='"+(node.name||"")+"' oninput='updateNodeName("+node.id+",this.value)'>";
+if(node.type==="switch"){
+// Swap model dropdown
+h+="<label>Swap Model</label><select onchange='swapSwitchModel("+node.id+",this.value)'><option value=''>-- Keep Current --</option>";
+catalog.switches.forEach(function(s){if(s.id!==node.catId)h+="<option value='"+s.id+"'>"+s.label+"</option>";});
+h+="</select>";
+// NIM selector for modular switches
+if(node.cat.modular){
+h+="<label>NIM Module</label><select onchange='updateNodeNim("+node.id+",this.value)'><option value=''>-- None --</option>";
+var nimKeys;
+if(node.catId.indexOf("C9300X")===0){
+nimKeys=["C9300X-NM-8Y","C9300X-NM-2C"];
+if(node.catId==="C9300X-48HX-M"||node.catId==="C9300X-48TX-M"||node.catId==="C9300X-24Y-M")nimKeys.push("C9300X-NM-4C");
+}else{nimKeys=["C9300-NM-8X","C9300-NM-2Q","C9300-NM-2Y"];}
+nimKeys.forEach(function(k){if(nimRef[k])h+="<option value='"+k+"'"+(node.nim===k?" selected":"")+">"+k+" — "+nimRef[k].desc+"</option>";});
+h+="</select>";
+}
+// AGG toggle
+h+="<label style='display:flex;align-items:center;gap:6px;margin:6px 0;'><input type='checkbox' "+(node.isAgg?"checked":"")+" onchange='toggleNodeAgg("+node.id+")'> AGG Switch</label>";
+// No Stack toggle (only for stackable switches)
+if(node.cat.stack){
+h+="<label style='display:flex;align-items:center;gap:6px;margin:6px 0;'><input type='checkbox' "+(node.noStack?"checked":"")+" onchange='toggleNodeNoStack("+node.id+")'> No Stack (HA)</label>";
+}
+var stacks=getStacks();
+var stack=getStackForNode(node.id,stacks);
+var used=getPortsUsed(node);
+if(stack){
+var totals=getStackTotals(stack);
+var ext=getStackExternalConnections(stack);
+var accessUsed=0,uplinkUsed=0,poeLoad=0,mgigUsed=0;
+ext.forEach(function(cn){
+if(totals.isAgg){uplinkUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera"){poeLoad+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){poeLoad+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}}
+else if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;
+else{accessUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera"){poeLoad+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){poeLoad+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}}
+});
+var accessFree=totals.access-accessUsed;
+var uplinkFree=totals.uplinks-uplinkUsed;
+h+="<div class='port-summary'>";
+h+="<b style='color:#00d4ff;'>Stack ("+stack.length+" members)</b><br>";
+stack.forEach(function(m){h+=m.name+" ("+m.cat.access+"p"+(m.cat.mgigPorts?", "+m.cat.mgigPorts+" mGig":"")+")<br>";});
+h+="<b>Access Ports:</b> "+accessUsed+" / "+totals.access+(accessFree<0?" <span class='fail'>OVER</span>":"")+"<br>";
+if(totals.mgig>0){h+="<b>mGig Ports:</b> "+mgigUsed+" / "+totals.mgig+" (>30W devices)"+(mgigUsed>totals.mgig?" <span class='fail'>OVER — not enough mGig ports</span>":"")+"<br>";}
+else if(mgigUsed>0){h+="<b>mGig Ports:</b> <span class='fail'>"+mgigUsed+" device(s) need >30W but no mGig ports available</span><br>";}
+h+="<b>Uplinks:</b> "+uplinkUsed+" / "+totals.uplinks+(uplinkFree<0?" <span class='fail'>OVER</span>":"")+"<br>";
+h+="<b>PoE Load:</b> "+Math.round(poeLoad)+"W / "+totals.poe+"W ("+(totals.poe>0?Math.round(poeLoad/totals.poe*100):0)+"%)"+(poeLoad>totals.poe*0.8?" <span class='fail'>HIGH</span>":"")+"<br>";
+h+="</div>";
+}else{
+var accessUsed=0,uplinkUsed=0;
+var connected=getConnectedNodes(node.id);
+var totalUL=getNodeUplinks(node);
+if(node.isAgg){
+var totalPorts=node.cat.access+totalUL;
+connected.forEach(function(cn){uplinkUsed++;});
+h+="<div class='port-summary'>";
+h+="<b style='color:#4ecca3;'>[AGG Mode]</b><br>";
+h+="<b>Total Ports:</b> "+uplinkUsed+" / "+totalPorts+" used"+(uplinkUsed>totalPorts?" <span class='fail'>OVER</span>":"")+"<br>";
+h+="</div>";
+}else{
+connected.forEach(function(cn){
+if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;
+else accessUsed+=(cn.qty||1);
+});
+var accessFree=node.cat.access-accessUsed;
+var uplinkFree=totalUL-uplinkUsed;
+var totalPoe=0,mgigUsed=0;
+connected.forEach(function(cn){if(cn.type==="ap"||cn.type==="camera"){totalPoe+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){totalPoe+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}});
+var nodeMgig=node.cat.mgigPorts||0;
+h+="<div class='port-summary'>";
+h+="<b>Access Ports:</b> "+accessUsed+" / "+node.cat.access+" used"+(accessFree<0?" <span class='fail'>OVER</span>":"")+"<br>";
+if(nodeMgig>0){h+="<b>mGig Ports:</b> "+mgigUsed+" / "+nodeMgig+" (>30W devices)"+(mgigUsed>nodeMgig?" <span class='fail'>OVER — not enough mGig ports</span>":"")+"<br>";}
+else if(mgigUsed>0){h+="<b>mGig Ports:</b> <span class='fail'>"+mgigUsed+" device(s) need >30W but no mGig ports available</span><br>";}
+h+="<b>Uplinks:</b> "+uplinkUsed+" / "+totalUL+" used"+(uplinkFree<0?" <span class='fail'>OVER</span>":"")+"<br>";
+h+="<b>PoE Load:</b> "+Math.round(totalPoe)+"W / "+node.cat.poe+"W ("+(node.cat.poe>0?Math.round(totalPoe/node.cat.poe*100):0)+"%)"+(totalPoe>node.cat.poe*0.8?" <span class='fail'>HIGH</span>":"")+"<br>";
+h+="</div>";
+}
+}
+}else if(node.type==="firewall"){
+var connected=getConnectedNodes(node.id);
+h+="<div class='port-summary'>";
+h+="<b>Connections:</b> "+connected.length+"<br>";
+connected.forEach(function(cn){h+=cn.name+" ("+cn.type+")<br>";});
+h+="</div>";
+}else if(node.type==="ap"||node.type==="camera"){
+h+="<label>Quantity</label><input type='number' value='"+(node.qty||1)+"' min='1' onchange='updateNodeQty("+node.id+",this.value)'>";
+if(node.cat.extAnt&&node.cat.antennas){
+h+="<label>Antenna</label><select onchange='updateNodeAnt("+node.id+",this.value)'><option value=''>-- Select --</option>";
+node.cat.antennas.forEach(function(a){
+var ref=antRef[a]||{};
+h+="<option value='"+a+"'"+(node.antenna===a?" selected":"")+">"+a+" — "+ref.desc+"</option>";
+});
+h+="</select>";
+var antPerAP=node.cat.antPerAP||1;
+var totalAnt=(node.qty||1)*antPerAP;
+if(node.antenna){
+h+="<div style='color:#4ecca3;font-size:11px;margin:4px 0;'>"+totalAnt+"x "+node.antenna+" needed ("+antPerAP+" per AP × "+(node.qty||1)+" APs)</div>";
+}else{
+h+="<div style='color:#e94560;font-size:11px;margin:4px 0;'>⚠ External antenna required</div>";
+}
+}
+h+="<div class='port-summary'>";
+h+="<b>Total Power:</b> "+Math.round(node.cat.power*(node.qty||1))+"W<br>";
+h+="<b>PoE Type:</b> 802.3"+node.cat.poe+"<br>";
+h+="<b>Ports Used:</b> "+(node.qty||1)+"<br>";
+h+="</div>";
+}else if(node.type==="poedevice"){
+h+="<label>Quantity</label><input type='number' value='"+(node.qty||1)+"' min='1' onchange='updateNodeQty("+node.id+",this.value)'>";
+h+="<label>Watts per device</label><input type='number' value='"+(node.customPower||15)+"' min='1' max='90' oninput='updateNodePower("+node.id+",this.value)'>";
+h+="<div class='port-summary'>";
+h+="<b>Total Power:</b> "+Math.round((node.customPower||15)*(node.qty||1))+"W<br>";
+h+="<b>Ports Used:</b> "+(node.qty||1)+"<br>";
+h+="</div>";
+}
+content.innerHTML=h;
+}
+function hideProps(){document.getElementById("propsPanel").style.display="none";}
+function updateNodeName(id,val){var n=nodes.find(function(n){return n.id===id;});if(n){n.name=val;draw();}}
+function updateNodePower(id,val){var n=nodes.find(function(n){return n.id===id;});if(n){n.customPower=Math.max(1,parseInt(val)||1);draw();updateSummary();showProps(n);}}
+function updateNodeQty(id,val){var n=nodes.find(function(n){return n.id===id;});if(n){n.qty=Math.max(1,parseInt(val)||1);draw();updateSummary();showProps(n);}}
+function updateNodeAnt(id,val){var n=nodes.find(function(n){return n.id===id;});if(n){n.antenna=val;draw();updateSummary();showProps(n);}}
+function updateNodeNim(id,val){
+var n=nodes.find(function(n){return n.id===id;});
+if(n){n.nim=val;n.nimPorts=val&&nimRef[val]?nimRef[val].ports:0;draw();updateSummary();showProps(n);}
+}
+function toggleNodeAgg(id){
+var n=nodes.find(function(n){return n.id===id;});
+if(n){n.isAgg=!n.isAgg;draw();updateSummary();showProps(n);}
+}
+function toggleNodeNoStack(id){
+var n=nodes.find(function(n){return n.id===id;});
+if(n){n.noStack=!n.noStack;draw();updateSummary();showProps(n);}
+}
+function swapSwitchModel(id,newCatId){
+if(!newCatId)return;
+var n=nodes.find(function(n){return n.id===id;});
+if(!n)return;
+saveUndo();
+var newCat=getCatItem("switch",newCatId);
+if(!newCat)return;
+n.catId=newCatId;n.cat=newCat;n.label=newCat.label;n.name=newCat.label;
+// Reset NIM if new model doesn't support it
+if(!newCat.modular){n.nim="";n.nimPorts=0;}
+draw();updateSummary();showProps(n);
+}
+function getNodeUplinks(node){return(node.cat.uplinks||0)+node.nimPorts;}
+function getNodeTotalPorts(node){return node.isAgg?(node.cat.access+getNodeUplinks(node)):node.cat.access;}
+
+// ===== SUMMARY =====
+function updateSummary(){
+var el=document.getElementById("summaryContent");
+if(nodes.length===0){el.innerHTML="Drop devices to begin";return;}
+var totalPower=0,totalPoe=0,swCount=0,apCount=0,camCount=0,senCount=0;
+nodes.forEach(function(n){
+var q=n.qty||1;
+if(n.type==="switch"){swCount++;totalPower+=n.cat.power;}
+else if(n.type==="ap"){apCount+=q;totalPoe+=n.cat.power*q;}
+else if(n.type==="camera"){camCount+=q;totalPoe+=n.cat.power*q;}
+else if(n.type==="sensor"){senCount+=q;}
+else if(n.type==="firewall"){totalPower+=n.cat.power;}
+});
+var h="<b>Equipment BOM:</b><br>";
+var bom={};
+nodes.forEach(function(n){
+var q=n.qty||1;
+var key=n.type==="generic"||n.type==="poedevice"?(n.name||n.catId):n.catId;
+if(!bom[key])bom[key]={label:n.type==="generic"||n.type==="poedevice"?(n.name||n.catId):(n.cat.label||n.catId),qty:0,type:n.type};
+bom[key].qty+=q;
+// count NIMs
+if(n.nim){
+if(!bom[n.nim])bom[n.nim]={label:n.nim,qty:0,type:"nim"};
+bom[n.nim].qty+=1;
+}
+});
+var bomKeys=Object.keys(bom).sort();
+bomKeys.forEach(function(k){
+var b=bom[k];
+if(b.type==="nim")return; // show NIMs under their parent switch
+h+=b.qty+"x "+b.label;
+// sub-items: NIMs under switches
+if(b.type==="switch"){
+var nimItems=[];
+nodes.forEach(function(n){if(n.catId===k&&n.nim){
+var nk=n.nim;
+var existing=nimItems.find(function(ni){return ni.sku===nk;});
+if(existing)existing.qty++;else nimItems.push({sku:nk,qty:1,desc:nimRef[nk]?nimRef[nk].desc:""});
+}});
+if(nimItems.length>0){h+="<br>";nimItems.forEach(function(ni){h+="&nbsp;&nbsp;↳ "+ni.qty+"x "+ni.sku+"<br>";});}
+else h+="<br>";
+}
+// sub-items: antennas under APs
+else if(b.type==="ap"){
+var antItems=[];
+nodes.forEach(function(n){if(n.catId===k&&n.antenna){
+var q=n.qty||1;var perAP=n.cat.antPerAP||1;var total=q*perAP;
+var existing=antItems.find(function(ai){return ai.sku===n.antenna;});
+if(existing)existing.qty+=total;else antItems.push({sku:n.antenna,qty:total,desc:antRef[n.antenna]?antRef[n.antenna].desc:""});
+}});
+var noAnt=[];
+nodes.forEach(function(n){if(n.catId===k&&n.cat.extAnt&&!n.antenna){noAnt.push(n);}});
+if(antItems.length>0||noAnt.length>0){h+="<br>";
+antItems.forEach(function(ai){h+="&nbsp;&nbsp;↳ "+ai.qty+"x "+ai.sku+" ("+ai.desc+")<br>";});
+noAnt.forEach(function(n){h+="&nbsp;&nbsp;↳ <span class='fail'>⚠ "+n.name+(n.qty>1?" x"+n.qty:"")+" — no antenna selected</span><br>";});
+}else h+="<br>";
+}
+else h+="<br>";
+});
+// stacking cables
+var stacks=getStacks();
+var stackCables={};
+stacks.forEach(function(stack){
+var family=getStackFamily(stack[0].catId);
+var count=stack.length;
+var sku,label;
+if(family==="MS150"){sku="MA-CBL-100G-50CM";label="MA-CBL-100G-50CM (MS150 stack cable)";}
+else if(family==="C9300L"){sku="C9300L-STAK-KIT2-M";label="C9300L-STAK-KIT2-M (stack kit)";}
+else if(family==="C9300"||family==="C9300X"){sku="STACK-T1-50CM-M";label="STACK-T1-50CM-M (stack cable)";}
+if(sku){
+// ring topology: always same number of cables as switches
+var cables=count;
+// C9300L needs a kit per switch (includes module + cable)
+if(family==="C9300L"){cables=count;}
+if(!stackCables[sku])stackCables[sku]={label:label,qty:0};
+stackCables[sku].qty+=cables;
+}
+});
+var cableKeys=Object.keys(stackCables);
+if(cableKeys.length>0){
+h+="<br><b>Stacking:</b><br>";
+cableKeys.forEach(function(k){h+=stackCables[k].qty+"x "+stackCables[k].label+"<br>";});
+}
+h+="<br><b>Totals:</b><br>";
+if(swCount)h+=swCount+" switch(es)<br>";
+if(apCount)h+=apCount+" AP(s)<br>";
+if(camCount)h+=camCount+" camera(s)<br>";
+if(senCount)h+=senCount+" sensor(s)<br>";
+h+="<b>Connections:</b> "+connections.length+"<br>";
+h+="<b>Est. Power:</b> "+Math.round(totalPower+totalPoe)+"W<br>";
+h+="<b>PoE Devices:</b> "+Math.round(totalPoe)+"W<br>";
+// port warnings
+var warnings=[];
+// helper: check per-port PoE class compatibility
+function checkPoeClass(switchNode,connectedNodes,warnList){
+var poeMax=switchNode.cat.poeMax||0;
+if(poeMax===0)return;
+connectedNodes.forEach(function(cn){
+var devPower=0;
+if(cn.type==="ap"||cn.type==="camera")devPower=cn.cat.power;
+else if(cn.type==="poedevice")devPower=cn.customPower||15;
+if(devPower>poeMax)warnList.push(switchNode.name+": "+(cn.name||cn.label)+" needs "+devPower+"W but port max is "+poeMax+"W");
+});
+}
+var stacks=getStacks();
+var inStack={};
+stacks.forEach(function(stack){
+stack.forEach(function(n){inStack[n.id]=true;});
+var totals=getStackTotals(stack);
+var ext=getStackExternalConnections(stack);
+var accessUsed=0,uplinkUsed=0,poeLoad=0,mgigUsed=0;
+ext.forEach(function(cn){
+if(totals.isAgg){uplinkUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera"){poeLoad+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){poeLoad+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}}
+else if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;
+else{accessUsed+=(cn.qty||1);if(cn.type==="ap"||cn.type==="camera"){poeLoad+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){poeLoad+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}}
+});
+var stackName=stack.map(function(n){return n.name;}).join("+");
+if(accessUsed>totals.access)warnings.push(stackName+": access ports over ("+accessUsed+"/"+totals.access+")");
+if(uplinkUsed>totals.uplinks)warnings.push(stackName+": uplinks over ("+uplinkUsed+"/"+totals.uplinks+")");
+if(totals.poe>0&&poeLoad>totals.poe*0.8)warnings.push(stackName+": PoE >80% ("+Math.round(poeLoad)+"W/"+totals.poe+"W)");
+if(totals.mgig>0&&mgigUsed>totals.mgig)warnings.push(stackName+": mGig ports over — "+mgigUsed+" devices need >30W but only "+totals.mgig+" mGig ports available");
+else if(totals.mgig===0&&mgigUsed>0)warnings.push(stackName+": "+mgigUsed+" device(s) need >30W but no mGig ports available");
+// per-port PoE class check for each stack member
+stack.forEach(function(n){checkPoeClass(n,ext,warnings);});
+});
+nodes.forEach(function(n){
+if(n.type!=="switch"||inStack[n.id])return;
+var connected=getConnectedNodes(n.id);
+var accessUsed=0,uplinkUsed=0;
+connected.forEach(function(cn){if(cn.type==="switch"||cn.type==="firewall")uplinkUsed++;else accessUsed+=(cn.qty||1);});
+if(n.isAgg){
+var totalPorts=n.cat.access+getNodeUplinks(n);
+var totalUsed=accessUsed+uplinkUsed;
+if(totalUsed>totalPorts)warnings.push(n.name+": ports over ("+totalUsed+"/"+totalPorts+")");
+}else{
+if(accessUsed>n.cat.access)warnings.push(n.name+": access ports over ("+accessUsed+"/"+n.cat.access+")");
+var totalUL=getNodeUplinks(n);
+if(uplinkUsed>totalUL)warnings.push(n.name+": uplinks over ("+uplinkUsed+"/"+totalUL+")");
+}
+var poeLoad=0,mgigUsed=0;connected.forEach(function(cn){if(cn.type==="ap"||cn.type==="camera"){poeLoad+=cn.cat.power*(cn.qty||1);if(cn.cat.power>30)mgigUsed+=(cn.qty||1);}else if(cn.type==="poedevice"){poeLoad+=(cn.customPower||15)*(cn.qty||1);if((cn.customPower||15)>30)mgigUsed+=(cn.qty||1);}});
+if(n.cat.poe>0&&poeLoad>n.cat.poe*0.8)warnings.push(n.name+": PoE >80% ("+Math.round(poeLoad)+"W/"+n.cat.poe+"W)");
+var nodeMgig=n.cat.mgigPorts||0;
+if(nodeMgig>0&&mgigUsed>nodeMgig)warnings.push(n.name+": mGig ports over — "+mgigUsed+" devices need >30W but only "+nodeMgig+" mGig ports available");
+else if(nodeMgig===0&&mgigUsed>0)warnings.push(n.name+": "+mgigUsed+" device(s) need >30W but no mGig ports available");
+checkPoeClass(n,connected,warnings);
+});
+// MX multi-switch warning
+nodes.forEach(function(n){
+if(n.type!=="firewall")return;
+var connected=getConnectedNodes(n.id);
+var swCount=0;
+connected.forEach(function(cn){if(cn.type==="switch")swCount++;});
+if(swCount>2)warnings.push(n.name+": "+swCount+" switches connected — MX does not run STP, avoid >2 switches in same broadcast domain (see Meraki MX L2 docs)");
+});
+if(warnings.length>0){h+="<br><b style='color:#e94560;'>Warnings:</b><br>";warnings.forEach(function(w){h+="<span class='fail'>⚠ "+w+"</span><br>";});}
+el.innerHTML=h;
+}
+
+// ===== SAVE / LOAD =====
+function saveDesign(){
+var name=prompt("Save name:","");if(!name)return;
+var saves=JSON.parse(localStorage.getItem("netDesignSaves")||"{}");
+saves[name]={nodes:nodes,connections:connections,zones:zones,nextId:nextId,nextZoneId:nextZoneId};
+localStorage.setItem("netDesignSaves",JSON.stringify(saves));
+refreshDesignList();alert("Saved: "+name);
+}
+function loadDesign(){
+var sel=document.getElementById("loadSelect");if(!sel.value)return;
+var saves=JSON.parse(localStorage.getItem("netDesignSaves")||"{}");
+var cfg=saves[sel.value];if(!cfg)return;
+nodes=cfg.nodes||[];connections=cfg.connections||[];zones=cfg.zones||[];nextId=cfg.nextId||1;nextZoneId=cfg.nextZoneId||1;
+// restore cat references
+nodes.forEach(function(n){n.cat=getCatItem(n.type,n.catId);});
+clearSelection();hideProps();draw();updateSummary();
+}
+function refreshDesignList(){
+var sel=document.getElementById("loadSelect");
+var saves=JSON.parse(localStorage.getItem("netDesignSaves")||"{}");
+sel.innerHTML="<option value=''>-- Load --</option>";
+Object.keys(saves).sort().forEach(function(k){sel.innerHTML+="<option value='"+k+"'>"+k+"</option>";});
+}
+function deleteSavedDesign(){
+var sel=document.getElementById("loadSelect");
+if(!sel.value){alert("Select a save to delete first.");return;}
+if(!confirm("Delete \""+sel.value+"\"?"))return;
+var saves=JSON.parse(localStorage.getItem("netDesignSaves")||"{}");
+delete saves[sel.value];
+localStorage.setItem("netDesignSaves",JSON.stringify(saves));
+refreshDesignList();
+}
+function exportDesign(){
+var data={nodes:nodes.map(function(n){var c={};for(var k in n)if(k!=="cat")c[k]=n[k];return c;}),connections:connections,zones:zones,nextId:nextId,nextZoneId:nextZoneId};
+var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+var name=prompt("File name:","design");if(!name)return;
+a.download=name+".json";a.click();URL.revokeObjectURL(a.href);
+}
+function exportImage(){
+var allItems=nodes.concat(zones.map(function(z){return{x:z.x,y:z.y,w:z.w,h:z.h};}));
+if(allItems.length===0){alert("Nothing to export.");return;}
+var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+allItems.forEach(function(n){
+minX=Math.min(minX,n.x);minY=Math.min(minY,n.y);
+maxX=Math.max(maxX,n.x+(n.w||130));maxY=Math.max(maxY,n.y+(n.h||50));
+});
+// include stack labels above nodes
+var stacks=getStacks();
+stacks.forEach(function(stack){var b=getStackBounds(stack);minX=Math.min(minX,b.x);minY=Math.min(minY,b.y);maxX=Math.max(maxX,b.x+b.w);maxY=Math.max(maxY,b.y+b.h);});
+var pad=40;
+var w=maxX-minX+pad*2,h=maxY-minY+pad*2;
+var scale=2; // 2x for crisp image
+var offCanvas=document.createElement("canvas");
+offCanvas.width=w*scale;offCanvas.height=h*scale;
+var oc=offCanvas.getContext("2d");
+oc.scale(scale,scale);
+oc.translate(-minX+pad,-minY+pad);
+// white background
+oc.fillStyle="#ffffff";
+oc.fillRect(minX-pad,minY-pad,w,h);
+// use light theme colors for export
+var et={bg:"#ffffff",grid:"#e0e0e0",nodeBorder:"#333",nodeText:"#111",subText:"#666",connLine:"#555",connLabel:"#333",connLabelBg:"#ffffff",zoneFill:"#e8f0fe88",zoneStroke:"#90a4ae",zoneText:"#0066cc",warnBar:"#eee",selectStroke:"#0066cc"};
+// zones
+zones.forEach(function(z){
+oc.fillStyle=et.zoneFill;oc.strokeStyle=et.zoneStroke;oc.lineWidth=1;
+oc.beginPath();oc.roundRect(z.x,z.y,z.w,z.h,8);oc.fill();oc.stroke();
+oc.fillStyle=et.zoneText;oc.font="bold 12px Arial";oc.textAlign="left";oc.textBaseline="top";
+oc.fillText(z.name,z.x+8,z.y+6);
+});
+// connections
+var mc={"Ethernet":"#5b9bd5","SMF":"#f0c040","MMF":"#e94560","GameChanger":"#4ecca3"};
+connections.forEach(function(c,idx){
+var a=nodes.find(function(n){return n.id===c.from;}),b=nodes.find(function(n){return n.id===c.to;});
+if(!a||!b)return;
+var po=parallelOffset(c,idx);
+if(c.custProvided){oc.setLineDash([8,6]);}else{oc.setLineDash([]);}
+oc.beginPath();oc.moveTo(a.x+a.w/2+po.x,a.y+a.h/2+po.y);oc.lineTo(b.x+b.w/2+po.x,b.y+b.h/2+po.y);
+oc.strokeStyle=mc[c.media]||mc["Ethernet"];oc.lineWidth=2;oc.stroke();
+oc.setLineDash([]);
+var isStackConn=false;
+if(a.type==="switch"&&b.type==="switch"){for(var si=0;si<stacks.length;si++){var mids={};stacks[si].forEach(function(sn){mids[sn.id]=true;});if(mids[a.id]&&mids[b.id]){isStackConn=true;break;}}}
+var hasLabel=!isStackConn&&(c.label||c.media);
+if(hasLabel){
+var acx=a.x+a.w/2,acy=a.y+a.h/2,bcx=b.x+b.w/2,bcy=b.y+b.h/2;
+var mx=acx+(bcx-acx)*po.t+po.x,my=acy+(bcy-acy)*po.t+po.y;
+var txt=c.label?((c.media||"")+" "+c.label).trim():(c.media||"");
+if(c.custProvided)txt="[CP] "+txt;
+var tw=oc.measureText(txt).width+12;
+oc.fillStyle="#ffffff";oc.fillRect(mx-tw/2,my-8,tw,16);
+oc.fillStyle="#333";oc.font="9px Arial";oc.textAlign="center";oc.textBaseline="middle";
+oc.fillText(txt,mx,my);
+}
+});
+// nodes
+var bgLight={firewall:"#d6f0ff",switch:"#dce8f5",ap:"#d6f5ec",camera:"#fef0d6",sensor:"#f0e0ff",generic:"#e8e8e8",poedevice:"#fde0e0"};
+var nodeColors={firewall:"#00d4ff",switch:"#5b9bd5",ap:"#4ecca3",camera:"#e9a045",sensor:"#c084fc",generic:"#999",poedevice:"#e06c75"};
+nodes.forEach(function(n){
+oc.fillStyle=bgLight[n.type]||"#f0f0f0";
+oc.strokeStyle=nodeColors[n.type]||"#444";oc.lineWidth=1;
+oc.beginPath();oc.roundRect(n.x,n.y,n.w,n.h,6);oc.fill();oc.stroke();
+oc.fillStyle=nodeColors[n.type]||"#333";
+oc.font="bold 11px Arial";oc.textAlign="center";oc.textBaseline="middle";
+var nameLabel=(n.qty>1?n.name+" x"+n.qty:n.name||n.label);
+oc.fillText(nameLabel,n.x+n.w/2,n.y+n.h/2-6);
+oc.fillStyle="#666";oc.font="10px Arial";
+var sub=n.type==="firewall"?n.cat.tier:n.type==="switch"?(n.cat.access+"p "+n.cat.poe+"W"+(n.nim?" +"+n.nim:"")+(n.isAgg?" [AGG]":"")):n.type==="sensor"?(n.cat.desc||""):n.type==="generic"?"":n.type==="poedevice"?(n.customPower+"W ea"):"("+n.cat.power+"W)";
+oc.fillText(sub,n.x+n.w/2,n.y+n.h/2+8);
+});
+// stacks
+stacks.forEach(function(stack){
+var b=getStackBounds(stack);var totals=getStackTotals(stack);
+oc.setLineDash([6,4]);oc.strokeStyle="#0066cc";oc.lineWidth=1.5;
+oc.beginPath();oc.roundRect(b.x,b.y,b.w,b.h,8);oc.stroke();
+oc.setLineDash([]);
+oc.fillStyle="#0066cc";oc.font="bold 10px Arial";oc.textAlign="left";oc.textBaseline="top";
+oc.fillText("Stack ("+stack.length+"x) — "+totals.access+"p / "+totals.poe+"W / "+totals.uplinks+" UL",b.x+4,b.y+3);
+});
+// download
+offCanvas.toBlob(function(blob){
+var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+var name=prompt("Image file name:","design");if(!name){URL.revokeObjectURL(a.href);return;}
+a.download=name+".png";a.click();URL.revokeObjectURL(a.href);
+},"image/png");
+}
+function importDesign(e){
+var file=e.target.files[0];if(!file)return;
+var reader=new FileReader();
+reader.onload=function(ev){
+try{
+var cfg=JSON.parse(ev.target.result);
+nodes=cfg.nodes||[];connections=cfg.connections||[];zones=cfg.zones||[];
+nextId=cfg.nextId||1;nextZoneId=cfg.nextZoneId||1;
+nodes.forEach(function(n){n.cat=getCatItem(n.type,n.catId);});
+clearSelection();hideProps();draw();updateSummary();fitToView();
+}catch(err){alert("Invalid design file");}
+};
+reader.readAsText(file);
+e.target.value="";
+}
+
+// ===== FILE NAME GENERATOR =====
+function generateFileName(){
+var txt=document.getElementById("fnInput").value;
+var opMatch=txt.match(/opportunity\s*#?\s*:?\s*(\d+)/i);
+var drtMatch=txt.match(/drt\s*project\s*id\s*:?\s*(\d+)/i);
+var nameMatch=txt.match(/name\s*:?\s*(.+)/i);
+if(!opMatch||!drtMatch||!nameMatch){document.getElementById("fnOutput").textContent="Could not parse — need Opportunity#, DRT Project ID, and Name";return;}
+var name=nameMatch[1].trim().toUpperCase();
+var op=opMatch[1].trim();
+var drt=drtMatch[1].trim();
+var d=new Date();
+var mm=String(d.getMonth()+1).padStart(2,"0");
+var dd=String(d.getDate()).padStart(2,"0");
+var yy=String(d.getFullYear()).slice(-2);
+var opt=parseInt(document.getElementById("fnOpt").value)||1;
+var ver=String(parseInt(document.getElementById("fnVer").value)||1).padStart(2,"0");
+var result=name+"_ND_OP "+op+"_DRT "+drt+"_Opt "+opt+"_"+mm+"."+dd+"."+yy+"_ver"+ver;
+document.getElementById("fnOutput").textContent=result;
+}
+function copyFileName(){
+var txt=document.getElementById("fnOutput").textContent;
+if(txt)navigator.clipboard.writeText(txt);
+}
+
+// ===== REFERENCE PANELS =====
+(function(){
+var r="";
+var lk=function(url,txt){return"<a href='"+url+"' target='_blank' style='color:#4ecca3;text-decoration:none;'>"+txt+"</a>";};
+var mxUrls={"MX68":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX68_Datasheet","MX75":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX75_Datasheet","MX85":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX85_Datasheet","MX95":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX95_Datasheet","MX105":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX105_Datasheet","MX250":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX250_Datasheet","MX450":"https://documentation.meraki.com/MX/MX_Overviews_and_Specifications/MX450_Datasheet"};
+var swUrls={"MS130-8P":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS130-8X":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS130R-8P":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130R_Datasheet","MS130-24P":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS130-24X":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS130-48P":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS130-48X":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS130_Datasheet","MS150-24P":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS150_Datasheet","MS150-48FP":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS150_Datasheet","MS150-24MP":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS150_Datasheet","MS150-48MP":"https://documentation.meraki.com/Switching/MS_-_Switches/Product_Information/Overviews_and_Datasheets/MS150_Datasheet","C9300L-24P-4X":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300L-M_Datasheet","C9300L-48P-4X":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300L-M_Datasheet","C9300L-48UXG-4X":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300L-M_Datasheet","C9300-24P":"https://documentation.meraki.com/Switching/Cloud_Management_with_IOS_XE/Placeholder/Overviews_and_Datasheets/Catalyst_9300-M_Datasheet","C9300-48P":"https://documentation.meraki.com/Switching/Cloud_Management_with_IOS_XE/Placeholder/Overviews_and_Datasheets/Catalyst_9300-M_Datasheet","C9300-48S":"https://documentation.meraki.com/Switching/Cloud_Management_with_IOS_XE/Placeholder/Overviews_and_Datasheets/Catalyst_9300-M_Datasheet","C9300X-24HX":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300X-M_Datasheet","C9300X-48HX":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300X-M_Datasheet","C9300X-12Y":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300X-M_Datasheet","C9300X-24Y":"https://documentation.meraki.com/MS/Product_Information/Overviews_and_Datasheets/Catalyst_9300X-M_Datasheet"};
+var apUrls={"MR36":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR36_Datasheet","MR36H":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR36H_Datasheet","MR46":"https://documentation.meraki.com/Wireless/Install_and_Get_Started/Installation_Guides/MR46_Installation_Guide","MR46E":"https://documentation.meraki.com/MR/Product_Information/Overviews_and_Datasheets/MR46E_Datasheet","MR57":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR57_Datasheet","MR76":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR76_Datasheet","MR78":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR78_Datasheet","MR86":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/MR86_Datasheet","CW9172I":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/CW9172I_Datasheet","CW9172H":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/CW9172H_Datasheet","CW9176I":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/CW9176I_%2F%2F_CW9176D1_Datasheet","CW9176D1":"https://documentation.meraki.com/Wireless/Product_Information/Overviews_and_Datasheets/CW9176I_%2F%2F_CW9176D1_Datasheet","CW9178I":"https://documentation.meraki.com/MR/MR_Overview_and_Specifications/CW9178I_Datasheet"};
+var camUrls={"MV2":"https://documentation.meraki.com/MV/MV_Overview_and_Specifications/Second_Generation_MV_Cameras:_Overview_and_Specifications","MV13M":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV13_Datasheet","MV32":"https://documentation.meraki.com/MV/MV_Overview_and_Specifications/Second_Generation_MV_Cameras:_Overview_and_Specifications","MV33M":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV33_Datasheet","MV52":"https://documentation.meraki.com/MV/MV_Overview_and_Specifications/Second_Generation_MV_Cameras:_Overview_and_Specifications","MV63":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV63_Series_Datasheet","MV63X":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV63_Series_Datasheet","MV72":"https://documentation.meraki.com/MV/MV_Overview_and_Specifications/Second_Generation_MV_Cameras:_Overview_and_Specifications","MV73M":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV73_Series_Datasheet","MV93":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV93_Series_Datasheet","MV93X":"https://documentation.meraki.com/MV/Product_Information/MV_Overviews_and_Datasheets/MV93_Series_Datasheet"};
+r+="<h3 onclick='toggleRefSection(this)'>MX Sizing</h3><div class='qr-section'><table><tr><th>Model</th><th>BW</th><th>Users</th><th>WAN</th><th>LAN</th></tr>";
+r+="<tr><td>"+lk(mxUrls.MX68,"MX68")+"</td><td>200M</td><td>50</td><td>2x 1G RJ45</td><td>8x 1G RJ45 + 2x 1G RJ45 PoE+</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX75,"MX75")+"</td><td>500M</td><td>200</td><td>1x 1G SFP + 2x 1G RJ45</td><td>8x 1G RJ45 + 2x 1G RJ45 PoE+</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX85,"MX85")+"</td><td>500M</td><td>250</td><td>2x 1G SFP + 2x 1G RJ45</td><td>8x 1G RJ45 + 2x 1G SFP</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX95,"MX95")+"</td><td>1G</td><td>500</td><td>2x 10G SFP+ + 2x 2.5G RJ45</td><td>4x 1G RJ45 + 2x 10G SFP+</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX105,"MX105")+"</td><td>2G</td><td>750</td><td>2x 10G SFP+ + 2x 2.5G RJ45</td><td>4x 1G RJ45 + 2x 10G SFP+</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX250,"MX250")+"</td><td>2G</td><td>2,000</td><td>2x 10G SFP+</td><td>8x 1G RJ45 + 8x 1G SFP + 8x 10G SFP+</td></tr>";
+r+="<tr><td>"+lk(mxUrls.MX450,"MX450")+"</td><td>5G</td><td>10,000</td><td>2x 10G SFP+</td><td>8x 1G RJ45 + 8x 1G SFP + 8x 10G SFP+</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Switches</h3><div class='qr-section'><table><tr><th>Model</th><th>Ports</th><th>/Port</th><th>mGig</th><th>/Port</th><th>Uplinks</th><th>Budget</th></tr>";
+catalog.switches.forEach(function(s){if(s.fiber)return;var url=swUrls[s.label]||"";var stdPorts=s.mgigPorts?(s.access-s.mgigPorts):s.access;var stdMax=s.mgigPorts?"30W":(s.poeMax?s.poeMax+"W":"--");var mgig=s.mgigPorts||"--";var mgigMax=s.mgigPorts?s.poeMax+"W":"--";var ha=(s.label==="MS130-8P"||s.label==="MS130-24X")?" *":"";r+="<tr><td>"+(url?lk(url,s.label):s.label)+ha+"</td><td>"+stdPorts+"</td><td>"+stdMax+"</td><td>"+mgig+"</td><td>"+mgigMax+"</td><td>"+(s.uplinks?s.uplinks+"x "+s.uplinkType:"Modular")+"</td><td>"+s.poe+"W</td></tr>";});
+r+="</table><div style='color:#aaa;font-size:10px;margin-top:4px;'>* HA breakout switch — one per WAN uplink for ENE/MNE HA. MS130-8P for &lt;1G, MS130-24X for &gt;1G.</div></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Fiber Aggregate</h3><div class='qr-section'><table><tr><th>Model</th><th>Ports</th><th>Speed</th><th>Uplinks</th></tr>";
+catalog.switches.forEach(function(s){if(!s.fiber)return;var url=swUrls[s.label]||"";r+="<tr><td>"+(url?lk(url,s.label):s.label)+"</td><td>"+s.access+"</td><td>1/10/25G SFP28</td><td>Modular</td></tr>";});
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>NIMs</h3><div class='qr-section'><table><tr><th>Module</th><th>Ports</th></tr>";
+for(var n in nimRef)r+="<tr><td>"+n+"</td><td>"+nimRef[n].desc+"</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Stacking</h3><div class='qr-section'><table><tr><th>Switch</th><th>Cable/Kit</th><th>Per Switch</th><th>Max</th></tr>";
+r+="<tr><td>MS150</td><td>MA-CBL-100G-50CM</td><td>1 cable</td><td>8</td></tr>";
+r+="<tr><td>C9300/X</td><td>STACK-T1-50CM</td><td>1 cable</td><td>8</td></tr>";
+r+="<tr><td>C9300L</td><td>C9300L-STACK-KIT2</td><td>1 kit</td><td>8</td></tr>";
+r+="<tr><td>MS130</td><td colspan='3' style='color:#888;'>No stacking</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Access Points</h3><div class='qr-section'><table><tr><th>Model</th><th>Power</th><th>PoE</th><th>Place</th></tr>";
+catalog.aps.forEach(function(a){var url=apUrls[a.label]||"";r+="<tr><td>"+(url?lk(url,a.label):a.label)+"</td><td>"+a.power+"W</td><td>"+a.poe+"</td><td>"+a.place+"</td></tr>";});
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Meraki AP Antennas</h3><div class='qr-section'><table><tr><th>SKU</th><th>Type</th><th>Gain</th><th>For</th></tr>";
+for(var k in antRef)r+="<tr><td>"+k+"</td><td>"+antRef[k].desc+"</td><td>"+antRef[k].gain+"</td><td>"+(k.indexOf("ANT-3")>=0?"MR46E":k.indexOf("ANT-2")>=0?"MR76, MR86":"")+"</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Cameras</h3><div class='qr-section'><table><tr><th>Model</th><th>Power</th><th>PoE</th><th>Place</th></tr>";
+catalog.cameras.forEach(function(c){var url=camUrls[c.label]||"";r+="<tr><td>"+(url?lk(url,c.label):c.label)+"</td><td>"+c.power+"W</td><td>"+c.poe+"</td><td>"+c.place+"</td></tr>";});
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>MV Camera Mounts</h3><div class='qr-section'>";
+r+="<div style='color:#00d4ff;font-size:11px;font-weight:bold;margin:4px 0 2px;'>Gen3 (MV13/23/33/53X/63/73/93)</div>";
+r+="<table><tr><th>SKU</th><th>Type</th><th>Cameras</th></tr>";
+r+="<tr><td>MA-MNT-MV-28</td><td>Pole Mount</td><td>All Gen3 + MV53X</td></tr>";
+r+="<tr><td>MA-MNT-MV-38</td><td>L-Bracket</td><td>All Gen3</td></tr>";
+r+="<tr><td>MA-MNT-MV-48</td><td>Wall Arm</td><td>All Gen3</td></tr>";
+r+="<tr><td>MA-MNT-MV-58</td><td>Junction Box</td><td>All Gen3 + MV53X</td></tr>";
+r+="<tr><td>MA-MNT-MV-68</td><td>T-Rail (deep/shallow)</td><td>All Gen3</td></tr>";
+r+="<tr><td>MA-MNT-MV-78</td><td>Telescoping Pendant</td><td>All Gen3</td></tr>";
+r+="<tr><td>MA-MNT-MV-88</td><td>Corner Mount</td><td>All Gen3 + MV53X</td></tr>";
+r+="<tr><td>MA-MNT-MV-11</td><td>Universal Adapter</td><td>Compatible w/ -28, -38, -48, -88</td></tr>";
+r+="</table>";
+r+="<div style='color:#00d4ff;font-size:11px;font-weight:bold;margin:8px 0 2px;'>Gen2 (MV2/12/22/32/52/72)</div>";
+r+="<table><tr><th>SKU</th><th>Type</th><th>Cameras</th></tr>";
+r+="<tr><td>MA-MNT-MV-10</td><td>Wall Arm</td><td>MV72</td></tr>";
+r+="<tr><td>MA-MNT-MV-20</td><td>Pole Mount</td><td>MV22, MV72</td></tr>";
+r+="<tr><td>MA-MNT-MV-21</td><td>Pole Mount</td><td>MV52</td></tr>";
+r+="<tr><td>MA-MNT-MV-30</td><td>Wall Arm</td><td>MV12, MV32</td></tr>";
+r+="<tr><td>MA-MNT-MV-40</td><td>Telescoping Pendant</td><td>MV12, MV32</td></tr>";
+r+="<tr><td>MA-MNT-CLG-1</td><td>T-Rail Clip</td><td>MV12, MV22, MV32</td></tr>";
+r+="</table>";
+r+="<div style='color:#888;font-size:10px;margin-top:4px;'>All cameras include wall/ceiling mount plate in box. Sources: <a href=\"https://documentation.meraki.com/MV/Install_and_Get_Started/Installation_Guides/Gen3_Meraki_MV_Mounting_Options_and_Guidelines\" target=\"_blank\" style=\"color:#4ecca3;\">Gen3</a> | <a href=\"https://documentation.meraki.com/MV/Install_and_Get_Started/Installation_Guides/Gen2_MV_Mounting_Options_and_Guidelines\" target=\"_blank\" style=\"color:#4ecca3;\">Gen2</a></div>";
+r+="</div>";
+r+="<h3 onclick='toggleRefSection(this)'>SFPs (Meraki/Cisco)</h3><div class='qr-section'><table><tr><th>Part #</th><th>Type</th></tr>";
+r+="<tr><td>PRE-SFP-10-CSCO</td><td>1G SM Fiber</td></tr>";
+r+="<tr><td>PRE-SFP-SX-CSCO</td><td>1G MM Fiber</td></tr>";
+r+="<tr><td>PRE-SFP-TME-CSCO</td><td>1G Copper</td></tr>";
+r+="<tr><td>PRE-SFP10G-10-CSCO</td><td>10G SM Fiber</td></tr>";
+r+="<tr><td>PRE-SFP10G-SR-CSCO</td><td>10G MM Fiber</td></tr>";
+r+="<tr><td>PRE-SFP25G-LR-CSCO</td><td>25G SM Fiber</td></tr>";
+r+="<tr><td>PRE-SFP25G-SR-CSCO</td><td>25G MM Fiber</td></tr>";
+r+="<tr><td>QSFP-100G-FR-S</td><td>100G SM Fiber (2km, LC)</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Racks & Backboards</h3><div class='qr-section'><table><tr><th>Code</th><th>Type</th></tr>";
+r+="<tr><td>HHPLYWOOD</td><td>Backboard (plywood)</td></tr>";
+r+="<tr><td>RK419WALLV</td><td>4U Wall Rack</td></tr>";
+r+="<tr><td>SFR-12-24</td><td>12U Wall Rack</td></tr>";
+r+="</table></div>";
+r+="<h3 onclick='toggleRefSection(this)'>Sensors (MT)</h3><div class='qr-section'><table><tr><th>Model</th><th>Function</th><th>Power</th><th>USB-C</th></tr>";
+r+="<tr><td>MT10</td><td>Temperature & Humidity</td><td>2x AA (5yr)</td><td>Yes</td></tr>";
+r+="<tr><td>MT11</td><td>Probe Sensor</td><td>2x AA (5yr)</td><td>Yes</td></tr>";
+r+="<tr><td>MT12</td><td>Water Detection</td><td>2x AA (5yr)</td><td>No</td></tr>";
+r+="<tr><td>MT14</td><td>Indoor Air Quality</td><td>4x AA (2yr)</td><td>Yes (req for PM2.5)</td></tr>";
+r+="<tr><td>MT20</td><td>Open/Close Detection</td><td>1x AA (5yr)</td><td>No</td></tr>";
+r+="<tr><td>MT30</td><td>Smart Automation Button</td><td>1x AA (5yr)</td><td>Yes</td></tr>";
+r+="</table><div style='color:#888;font-size:10px;margin-top:4px;'>All MT sensors use BLE — no PoE, no switch port needed. Require MR or MV as gateway (max 32 sensors per gateway).<br>Source: <a href='https://documentation.meraki.com/IoT/MT_-_Sensors/Design_and_Configure/Best_Practice_Design_-_MT' target='_blank' style='color:#4ecca3;'>MT Best Practices</a></div></div>";
+document.getElementById("merakiRefContent").innerHTML=r;
+
+var f="";
+f+="<h3 onclick='toggleRefSection(this)'>FortiGate BAU Sizing</h3><div class='qr-section'><table><tr><th>BW Tier</th><th>BAU</th><th>Firewall</th><th>Threat</th><th>Est. +DPI</th><th>Lic Code</th></tr>";
+f+="<tr><td>≤200M</td><td>FG-40F</td><td>5G</td><td>600M</td><td>--</td><td>0040F</td></tr>";
+f+="<tr><td>≤500M</td><td>FG-60F</td><td>10G</td><td>700M</td><td>--</td><td>0060F</td></tr>";
+f+="<tr><td>≤1G</td><td>FG-100F</td><td>20G</td><td>1G</td><td>500M</td><td>F100F</td></tr>";
+f+="<tr><td>≤2G</td><td>FG-200F</td><td>27G</td><td>3G</td><td>1.5G</td><td>F200F</td></tr>";
+f+="<tr><td>≤2G</td><td>FG-90G ⏳</td><td>28G</td><td>2.2G</td><td>1.1G</td><td>0090G</td></tr>";
+f+="<tr><td>≤5G</td><td>FG-400F</td><td>79.5G</td><td>9G</td><td>4.5G</td><td>0400F</td></tr>";
+f+="<tr><td>≤10G</td><td>FG-600F</td><td>139G</td><td>10.5G</td><td>5.25G</td><td>0600F</td></tr>";
+f+="</table><div style='color:#f0c040;font-size:10px;margin-top:4px;'>⏳ FG-90G pending product approval — ready to deploy once notified. FG-200F selling remaining stock.</div></div>";
+f+="<h3 onclick='toggleRefSection(this)'>FortiGate ICB Devices</h3><div class='qr-section'><table><tr><th>Tier</th><th>Model</th><th>FW</th><th>Threat</th><th>+DPI</th><th>Lic Code</th></tr>";
+f+="<tr><td>≤200M</td><td>FWF-30G-A</td><td>4G</td><td>500M</td><td>--</td><td>FG30G</td></tr>";
+f+="<tr><td>≤500M</td><td>FG-61F</td><td>10G</td><td>700M</td><td>--</td><td>0061F</td></tr>";
+f+="<tr><td>≤5G</td><td>FG-200G</td><td>39G</td><td>6G</td><td>3G</td><td>FG2HG</td></tr>";
+f+="<tr><td>≤20G</td><td>FG-900G</td><td>164G</td><td>30G</td><td>15G</td><td>FG9H0</td></tr>";
+f+="<tr><td>≤20G</td><td>FG-3000F</td><td>397G</td><td>33G</td><td>16.5G</td><td>F3K0F</td></tr>";
+f+="<tr><td>≤50G</td><td>FG-3200F</td><td>387G</td><td>45G</td><td>22.5G</td><td>F3K2F</td></tr>";
+f+="<tr><td>100G+</td><td>FG-4200F ⚠</td><td>800G</td><td>45G</td><td>22.5G</td><td>F42HF</td></tr>";
+f+="<tr><td>100G+</td><td>FG-6500F ⚠</td><td>239G</td><td>100G</td><td>50G</td><td>6K50F</td></tr>";
+f+="<tr><td>100G+</td><td>FG-3800G</td><td>795G</td><td>200G</td><td>100G</td><td>3K80G</td></tr>";
+f+="<tr><td>100G+</td><td>FG-7121F ⚠</td><td>1.89T</td><td>520G</td><td>260G</td><td>F7CF1</td></tr>";
+f+="</table></div>";
+f+="<h3 onclick='toggleRefSection(this)'>ENE vs ENR Licensing</h3><div class='qr-section'><table><tr><th>License</th><th>SKU Pattern</th></tr>";
+f+="<tr><td colspan='2' style='color:#4ecca3;font-weight:bold;'>ENE</td></tr>";
+f+="<tr><td>UTP (Unified Threat)</td><td>FC-10-XXXXX-950-02-12</td></tr>";
+f+="<tr><td>FortiCloud (1yr logs)</td><td>FC-10-XXXXX-131-02-12</td></tr>";
+f+="<tr><td colspan='2' style='color:#4ecca3;font-weight:bold;'>ENR</td></tr>";
+f+="<tr><td>FortiCare 24x7</td><td>FC-10-XXXXX-247-02-12</td></tr>";
+f+="<tr><td>FortiCloud (1yr logs)</td><td>FC-10-XXXXX-131-02-12</td></tr>";
+f+="</table><div style='color:#ff6b6b;font-size:10px;margin-top:4px;'>⚠ FortiGate Cloud not available on FG-4200F, FG-6500F, FG-7121F (confirmed from 2026Q1 price list — no -131 SKU). FG-3800G does have FortiCloud.</div></div>";
+f+="<h3 onclick='toggleRefSection(this)'>FortiGate Interfaces</h3><div class='qr-section'><table><tr><th>Model</th><th>Interfaces</th></tr>";
+f+="<tr><td>FWF-30G-A</td><td>3x GE RJ45 + 1x WAN + WiFi</td></tr>";
+f+="<tr><td>FG-40F</td><td>5x GE RJ45</td></tr>";
+f+="<tr><td>FG-60F</td><td>7x GE RJ45 + 2x WAN + 1x DMZ</td></tr>";
+f+="<tr><td>FG-90G</td><td>8x GE RJ45, 2x 10GE RJ45/SFP+ shared WAN</td></tr>";
+f+="<tr><td>FG-100F</td><td>22x GE RJ45, 4x GE SFP, 2x 10GE SFP+</td></tr>";
+f+="<tr><td>FG-200F</td><td>16x GE RJ45, 8x GE SFP, 4x 10GE SFP+</td></tr>";
+f+="<tr><td>FG-400F</td><td>8x 10G SFP+, 8x GE SFP, 18x GE RJ45</td></tr>";
+f+="<tr><td>FG-600F</td><td>16x GE RJ45, 8x GE SFP, 4x 10GE SFP+, 4x 25GE SFP28</td></tr>";
+f+="<tr><td>FG-200G</td><td>8x GE RJ45, 8x 5GE RJ45, 8x 10GE SFP+, 4x GE SFP</td></tr>";
+f+="<tr><td>FG-900G</td><td>16x GE RJ45, 8x GE SFP, 4x 10GE SFP+, 4x 25GE SFP28 ULL</td></tr>";
+f+="<tr><td>FG-4200F</td><td>16x 25GE SFP28, 8x 100GE QSFP28</td></tr>";
+f+="<tr><td>FG-6500F</td><td>24x 25GE SFP28, 4x 100GE QSFP28</td></tr>";
+f+="<tr><td>FG-3000F</td><td>16x 10GE RJ45, 14x 25GE SFP28, 6x 100GE QSFP28</td></tr>";
+f+="<tr><td>FG-3200F</td><td>10x 50GE SFP56, 4x ULL SFP28, 4x 400GE QSFP-DD</td></tr>";
+f+="<tr><td>FG-3800G</td><td>18x 50GE SFP56, 6x 200GE QSFP56, 4x 400GE QSFP-DD</td></tr>";
+f+="<tr><td>FG-7121F</td><td>16RU chassis (10 FPM + 2 FIM slots). Default: 24x 400GE QSFP-DD/100GE/40GE, 36x 100GE QSFP28/40GE, 80x 25GE SFP28/10GE SFP+, 4x GE RJ45 Mgmt</td></tr>";
+f+="</table></div>";
+f+="<h3 onclick='toggleRefSection(this)'>FortiSwitches</h3><div class='qr-section'>";
+f+="<div style='color:#aaa;font-size:11px;margin-bottom:4px;'>License per model: FC-10-&lt;code&gt;-247-02-12 (1yr 24x7 FortiCare)</div>";
+f+="<table><tr><th>Model</th><th>Ports</th><th>/Port</th><th>Uplinks</th><th>Budget</th><th>Lic Code</th></tr>";
+f+="<tr><td>FS-108F</td><td>7+1 GE</td><td>--</td><td>2x GE SFP</td><td>--</td><td>F108N</td></tr>";
+f+="<tr><td>FS-108F-FPOE</td><td>8 GE</td><td>30W</td><td>2x GE SFP</td><td>130W</td><td>F108F</td></tr>";
+f+="<tr><td>FS-124F</td><td>24 GE</td><td>--</td><td>4x 10G SFP+</td><td>--</td><td>S124N</td></tr>";
+f+="<tr><td>FS-124F-FPOE</td><td>24 GE</td><td>30W</td><td>4x 10G SFP+</td><td>370W</td><td>S124F</td></tr>";
+f+="<tr><td>FS-148F</td><td>48 GE</td><td>--</td><td>4x 10G SFP+</td><td>--</td><td>148FN</td></tr>";
+f+="<tr><td>FS-148F-FPOE</td><td>48 GE</td><td>30W</td><td>4x 10G SFP+</td><td>740W</td><td>148FF</td></tr>";
+f+="<tr><td>FS-424E</td><td>24 GE</td><td>--</td><td>4x 10G SFP+</td><td>--</td><td>S424E</td></tr>";
+f+="<tr><td>FS-424E-FPOE</td><td>24 GE</td><td>30W</td><td>4x 10G SFP+</td><td>421W</td><td>S424F</td></tr>";
+f+="<tr><td>FS-448E</td><td>48 GE</td><td>--</td><td>4x 10G SFP+</td><td>--</td><td>S448N</td></tr>";
+f+="<tr><td>FS-448E-FPOE</td><td>48 GE</td><td>30W</td><td>4x 10G SFP+</td><td>772W</td><td>S448F</td></tr>";
+f+="<tr><td>FS-1024E</td><td>24x 10G SFP+</td><td>--</td><td>2x 100G QSFP28</td><td>--</td><td>S1E24</td></tr>";
+f+="</table></div>";
+f+="<h3 onclick='toggleRefSection(this)'>FortiAPs</h3><div class='qr-section'>";
+f+="<div style='font-size:11px;margin-bottom:4px;'>License per model: FC-10-&lt;code&gt;-247-02-12 (1yr 24x7 FortiCare Premium)</div>";
+f+="<div style='font-size:10px;color:#e9a045;margin-bottom:6px;'>Warehouse stock only — once sold out, no more APs offered.</div>";
+f+="<table><tr><th>Model</th><th>WiFi</th><th>Place</th><th>Lic Code</th></tr>";
+f+="<tr><td>FAP-431F-A</td><td>6</td><td>Indoor</td><td>F431F</td></tr>";
+f+="<tr><td>FAP-234F-A</td><td>6</td><td>In/Outdoor</td><td>P234F</td></tr>";
+f+="<tr><td>FAP-831F-A</td><td>6</td><td>Indoor</td><td>F831F</td></tr>";
+f+="<tr><td>FAP-231K-A</td><td>6</td><td>In/Outdoor</td><td>P231K</td></tr>";
+f+="<tr><td>FAP-432F-A</td><td>6</td><td>Outdoor</td><td>F432F</td></tr>";
+f+="<tr><td>FAP-231F-A</td><td>6</td><td>In/Outdoor</td><td>P231F</td></tr>";
+f+="</table>";
+f+="</div>";
+f+="<h3 onclick='toggleRefSection(this)'>FortiGate SFPs</h3><div class='qr-section'><table><tr><th>Part #</th><th>Type</th></tr>";
+f+="<tr><td>FN-TRAN-GC</td><td>1G Copper</td></tr>";
+f+="<tr><td>FN-TRAN-LX</td><td>1G SM Fiber</td></tr>";
+f+="<tr><td>FN-TRAN-SX</td><td>1G MM Fiber</td></tr>";
+f+="<tr><td>FN-TRAN-SFP+LR</td><td>10G SM Fiber</td></tr>";
+f+="<tr><td>FN-TRAN-SFP+SR</td><td>10G MM Fiber</td></tr>";
+f+="<tr><td>FN-TRAN-QSFP28-LR</td><td>100G SM Fiber</td></tr>";
+f+="<tr><td>FN-TRAN-QSFP28-SR</td><td>100G MM Fiber</td></tr>";
+f+="<tr><td colspan='2' style='color:#4ecca3;font-weight:bold;padding-top:6px;'>Precision (validated on FG)</td></tr>";
+f+="<tr><td>PRE-SFP25G-LR-CSCO</td><td>25G SM Fiber</td></tr>";
+f+="<tr><td>PRE-SFP25G-SR-CSCO</td><td>25G MM Fiber</td></tr>";
+f+="</table></div>";
+f+="<h3 onclick='toggleRefSection(this)'>ENE Managed Platform Pricing</h3><div class='qr-section'>";
+f+="<div style='color:#aaa;font-size:11px;margin-bottom:8px;line-height:1.6;'>Pricing has two components:<br><b style=\"color:#4ecca3;\">1. Platform sizing</b> — Choose one FortiManager tier (based on # of FortiGates/VDOMs) + one FortiAnalyzer tier (based on daily log volume).<br><b style=\"color:#4ecca3;\">2. Fixed managed platform fee (~$983/mo)</b> — Covers HA, backup &amp; archival, load balancing, WAF, Network Firewall, Shield Advanced, and ongoing operations. Applies to every deployment regardless of size.</div>";
+f+="<div style='color:#00d4ff;font-size:12px;font-weight:bold;margin:10px 0 4px;'>FortiManager Tiers (Centralized Management &amp; Policy)</div>";
+f+="<table><tr><th>Tier</th><th>Best For</th><th>Capacity</th><th>Monthly</th></tr>";
+f+="<tr><td>Starter</td><td>Small deployments / PoC</td><td>Up to 10 FGs / 10 VDOMs</td><td>$252</td></tr>";
+f+="<tr><td>Standard</td><td>Mid-market and enterprise</td><td>Up to 300 FGs / 100 VDOMs</td><td>$446</td></tr>";
+f+="<tr><td>Enterprise</td><td>Large or complex environments</td><td>Up to 500 FGs / 300 VDOMs</td><td>$835</td></tr>";
+f+="<tr><td>High-Scale</td><td>Very large / service providers</td><td>Up to 1,500 FGs / 1,000 VDOMs</td><td>$1,612</td></tr>";
+f+="</table>";
+f+="<div style='color:#00d4ff;font-size:12px;font-weight:bold;margin:10px 0 4px;'>FortiAnalyzer Tiers (Logging, Reporting &amp; Analytics)</div>";
+f+="<table><tr><th>Tier</th><th>Best For</th><th>Daily Log Volume</th><th>Monthly</th></tr>";
+f+="<tr><td>Starter</td><td>Light logging</td><td>Up to 2 GB/day</td><td>$216</td></tr>";
+f+="<tr><td>Standard</td><td>Moderate (most common mid-market)</td><td>Up to 100 GB/day</td><td>$2,473</td></tr>";
+f+="<tr><td>Enterprise</td><td>High-volume / compliance-driven</td><td>Up to 500 GB/day</td><td>$11,316</td></tr>";
+f+="<tr><td>High-Scale</td><td>Max scale (heavy logging / 1000+ devices)</td><td>Up to 1,500 GB/day</td><td>$33,249</td></tr>";
+f+="</table></div>";
+f+="<h3 onclick='toggleRefSection(this)'>MNR — Cisco Catalyst 8000</h3><div class='qr-section'>";
+f+="<div style='color:#aaa;font-size:11px;margin-bottom:6px;'>MNR SOLUTION — licensing included, no term</div>";
+f+="<table><tr><th>BW Tier</th><th>Model</th><th>Interfaces</th><th>Expansion</th></tr>";
+f+="<tr><td>≤500M</td><td><a href='https://www.cisco.com/c/en/us/products/collateral/routers/catalyst-8200-series-edge-platforms/nb-06-cat8200-series-edge-plat-ds-cte-en.html' target='_blank' style='color:#4ecca3;'>C8200L-1N-4T</a></td><td>2x 1G RJ45, 2x 1G SFP</td><td>1 NIM slot</td></tr>";
+f+="<tr><td>≤2G</td><td><a href='https://www.cisco.com/c/en/us/products/collateral/routers/catalyst-8300-series-edge-platforms/datasheet-c78-744088.html' target='_blank' style='color:#4ecca3;'>C8300-1N1S-6T</a></td><td>4x 1G RJ45, 2x 1G SFP</td><td>1 NIM + 1 SM slot</td></tr>";
+f+="<div style='color:#ff6b6b;font-size:10px;margin:-6px 0 4px 4px;'>⚠ All ports 1G max — 2G requires dual WAN. Single circuit >1G needs C8500L.</div>";
+f+="<tr><td>≤19G</td><td><a href='https://www.cisco.com/c/en/us/products/collateral/routers/catalyst-8500-series-edge-platforms/datasheet-c78-744089.html' target='_blank' style='color:#4ecca3;'>C8500L-8S4X</a></td><td>8x 1G SFP, 4x 10G SFP+</td><td>None</td></tr>";
+f+="</table>";
+f+="<div style='color:#00d4ff;font-size:11px;font-weight:bold;margin:8px 0 4px;'>Available Expansion Modules</div>";
+f+="<table><tr><th>SKU</th><th>Type</th><th>Slot</th><th>Ports</th></tr>";
+f+="<tr><td>NIM-ES2-4</td><td>L2 Switch NIM</td><td>NIM</td><td>4x GE RJ45</td></tr>";
+f+="<tr><td>NIM-ES2-8</td><td>L2 Switch NIM</td><td>NIM</td><td>8x GE RJ45</td></tr>";
+f+="<tr><td>C-SM-16P4M2X</td><td>L2 Switch SM</td><td>SM</td><td>16x GE RJ45 PoE, 4x 2.5G mGig, 2x 10G SFP+</td></tr>";
+f+="</table>";
+f+="<div style='color:#aaa;font-size:10px;margin-top:4px;'>All switch modules are hardware-switched (dedicated ASIC). Inter-VLAN/WAN traffic routes through platform CPU.</div>";
+f+="</div>";
+document.getElementById("fortinetRefContent").innerHTML=f;
+})();
+
+// ===== INIT =====
+buildPalette();resizeCanvas();refreshDesignList();
+</script>
+</html>
