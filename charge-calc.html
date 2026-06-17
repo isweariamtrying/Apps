@@ -76,7 +76,7 @@ var SOC_TABLE = [
   [3.80, 60],
   [3.85, 67],
   [3.90, 74],
-  [3.96, 80],   // 80% target — end of CC phase
+  [3.96, 80],   // 80% target
   [4.00, 85],
   [4.05, 90],
   [4.10, 94],
@@ -132,7 +132,8 @@ function calc() {
   var socNow = voltToSoc(v);
   var socTarget = 80;
   var ahNeeded = ((socTarget - socNow) / 100) * AH;
-  var hours = ahNeeded / CHARGER_A;
+  var efficiencyFactor = 0.91;  // ~9% lost to heat, BMS, CC/CV taper
+  var hours = ahNeeded / (CHARGER_A * efficiencyFactor);
   var h = Math.floor(hours);
   var m = Math.round((hours - h) * 60);
 
