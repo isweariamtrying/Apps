@@ -1,4 +1,4 @@
-const CACHE_NAME = 'charge-calc-v2';
+const CACHE_NAME = 'charge-calc-v3';
 const URLS_TO_CACHE = ['./charge-calc.html'];
 
 self.addEventListener('install', function(event) {
