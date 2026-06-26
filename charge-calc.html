@@ -28,13 +28,13 @@ input[type=number]:focus{outline:none;border-color:#4ecca3;}
 </head>
 <body>
 <h1>⚡ Charge Time Calculator</h1>
-<div class="subtitle">76V 48Ah Li-ion (21S) · 5A Charger · v3</div>
+<div class="subtitle">76V 48Ah Li-ion (21S) · 5A Charger · v4</div>
 <div class="card">
 <label>Current Pack Voltage (V)</label>
 <input type="number" id="volts" step="0.1" min="63" max="88.2" value="72" oninput="calc()">
 <div class="bar-wrap">
 <div class="bar-fill" id="barFill"></div>
-<div class="bar-target" id="barTarget" style="left:80%;"></div>
+<div class="bar-target" id="barTarget" style="left:85%;"></div>
 <div class="bar-label" id="barLabel">0%</div>
 </div>
 <div class="result" id="result">
@@ -45,7 +45,7 @@ input[type=number]:focus{outline:none;border-color:#4ecca3;}
 </div>
 <div class="specs">
 Battery: 21S12P 21700 · 48Ah · 63V–88.2V<br>
-Charger: 5A CC/CV · 80% target ≈ 83.2V<br>
+Charger: 5A CC/CV · 85% target ≈ 84.0V<br>
 NMC discharge curve lookup (calibrated to real-world data)
 </div>
 <script>
@@ -53,7 +53,7 @@ NMC discharge curve lookup (calibrated to real-world data)
 var CELLS = 21;
 var V_MIN = 3.0 * CELLS;  // 63.0V (0% SOC)
 var V_MAX = 4.2 * CELLS;  // 88.2V (100% SOC)
-var V_80 = 3.96 * CELLS;  // ~83.2V (80% SOC — approx end of CC phase)
+var V_80 = 4.00 * CELLS;  // ~84.0V (85% SOC target — safe buffer above 80%)
 var AH = 48;
 var CHARGER_A = 5;
 
@@ -116,8 +116,8 @@ function calc() {
     return;
   }
   if (v >= V_80) {
-    timeEl.textContent = 'Already ≥80%';
-    detailEl.textContent = 'Pack is at or above 80% SOC (' + voltToSoc(v).toFixed(0) + '%). No CC charging needed.';
+    timeEl.textContent = 'Already ≥85%';
+    detailEl.textContent = 'Pack is at or above 85% SOC (' + voltToSoc(v).toFixed(0) + '%). No charging needed.';
     var pct = Math.min(100, voltToSoc(v));
     barFill.style.width = pct + '%';
     barFill.style.background = '#4ecca3';
@@ -130,9 +130,9 @@ function calc() {
   }
 
   var socNow = voltToSoc(v);
-  var socTarget = 80;
+  var socTarget = 85;
   var ahNeeded = ((socTarget - socNow) / 100) * AH;
-  var efficiencyFactor = 0.91;  // ~9% lost to heat, BMS, CC/CV taper
+  var efficiencyFactor = 0.78;  // ~22% lost to heat, BMS, CC/CV taper (calibrated from real data)
   var hours = ahNeeded / (CHARGER_A * efficiencyFactor);
   var h = Math.floor(hours);
   var m = Math.round((hours - h) * 60);
@@ -144,7 +144,7 @@ function calc() {
 
   timeEl.textContent = timeStr;
   detailEl.textContent =
-    'Current SOC: ~' + socNow.toFixed(0) + '% → Target: 80%\n' +
+    'Current SOC: ~' + socNow.toFixed(0) + '% → Target: 85%\n' +
     'Ah needed: ' + ahNeeded.toFixed(1) + ' Ah @ ' + CHARGER_A + 'A\n' +
     'Target voltage: ~' + V_80.toFixed(1) + 'V';
 
